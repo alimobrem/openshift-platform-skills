@@ -316,7 +316,8 @@ Evals on `claude-opus-4-6`. Tests **outcomes** (correct YAML, right CRDs, safety
 <tr><td>Platform health check</td><td><b>10/10</b></td><td>All 7 controllers checked, CRDs verified, summary produced</td></tr>
 <tr><td>Quay registry setup</td><td><b>10/10</b></td><td>QuayRegistry CR + Clair + robot accounts + scanning policies + Tekton integration</td></tr>
 <tr><td>ESO + Vault</td><td><b>10/10</b></td><td>ClusterSecretStore + Vault K8s auth + 3 ExternalSecrets + 1h refresh</td></tr>
-<tr><td><b>Overall</b></td><td><b>100/100</b></td><td>Perfect score across all 10 evals — correct YAML, right CRDs, complete coverage</td></tr>
+<tr><td><b>Overall (Opus)</b></td><td><b>100/100</b></td><td>Perfect score — correct YAML, right CRDs, complete coverage</td></tr>
+<tr><td><b>Overall (Sonnet)</b></td><td><b>99/100</b></td><td>Near-perfect — only miss: namespace enrollment count in OSSM eval</td></tr>
 </tbody>
 </table>
 
