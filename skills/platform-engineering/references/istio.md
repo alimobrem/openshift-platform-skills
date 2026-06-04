@@ -29,18 +29,86 @@ operator replaces the Maistra-based operator entirely.
 
 ## Operator Installation (OSSM 3.0)
 
-```bash
-# Single operator: "Red Hat OpenShift Service Mesh" (Sail-based)
-#   OperatorHub: "Red Hat OpenShift Service Mesh" -> openshift-operators
-#
-# Optional: Install Kiali Operator separately for the service mesh console
-#   OperatorHub: "Kiali Operator" -> openshift-operators
-#
-# Optional: OpenTelemetry Collector for distributed tracing
-#   OperatorHub: "Red Hat build of OpenTelemetry" -> openshift-operators
+### Step 1: Install the Red Hat OpenShift Service Mesh Operator
 
-# Verify
-oc get csv -n openshift-operators | grep -E 'servicemesh|sail|kiali|opentelemetry'
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: servicemeshoperator3
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: servicemeshoperator3
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+
+**Important:** The operator name is `servicemeshoperator3` (not `servicemeshoperator` which is OSSM 2.x).
+Source is `redhat-operators` — this is the Red Hat-supported distribution, not the upstream sail-operator.
+
+### Step 2 (Optional): Install Kiali Operator
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: kiali-ossm
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: kiali-ossm
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+
+### Step 3 (Optional): Install OpenTelemetry for distributed tracing
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: opentelemetry-product
+  namespace: openshift-opentelemetry-operator
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: opentelemetry-product
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+
+### Verify
+
+```bash
+oc get csv -n openshift-operators | grep -E 'servicemesh|kiali|opentelemetry'
+```
+
+### Installation Order
+
+**IstioCNI must be installed before the Istio control plane.** The CNI handles network
+interception without requiring elevated privileges.
+
+```yaml
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: istio-cni
+---
+apiVersion: sailoperator.io/v1
+kind: IstioCNI
+metadata:
+  name: default
+spec:
+  namespace: istio-cni
+  profile: openshift
+```
+
+Wait for IstioCNI to be ready before creating the Istio CR:
+```bash
+oc wait --for=condition=Ready istiocni/default --timeout=120s
 ```
 
 ## Istio CR -- Production Control Plane Config
@@ -50,10 +118,12 @@ apiVersion: sailoperator.io/v1
 kind: Istio
 metadata:
   name: default
-  namespace: istio-system
 spec:
   version: v1.24.3                         # OSSM 3.0 ships Istio 1.24; OSSM 3.1 ships 1.26
   namespace: istio-system
+  profile: openshift                       # Required for OpenShift — sets platform-specific defaults
+  updateStrategy:
+    type: InPlace
   values:
     global:
       proxy:
