@@ -1,0 +1,25 @@
+{
+  "author": {
+    "email": "openshift-platform-skills@example.com",
+    "name": "The OpenShift Platform Skills authors",
+    "url": "https://github.com/alimobrem/openshift-platform-skills"
+  },
+  "description": "Skills to transform AI Agents into OpenShift Platform Engineers",
+  "homepage": "https://github.com/alimobrem/openshift-platform-skills",
+  "interface": {
+    "capabilities": [
+      "Read",
+      "Write"
+    ],
+    "category": "Developer Tools",
+    "displayName": "OpenShift Platform Engineering Skills",
+    "longDescription": "Collection of reusable AI skills for OpenShift platform engineering — Shipwright builds, Tekton pipelines, Quay registry, External Secrets, Istio/OSSM service mesh, gitops-promoter delivery flows, DORA metrics, and team onboarding.",
+    "shortDescription": "Skills to transform AI Agents into OpenShift Platform Engineers",
+    "websiteURL": "https://github.com/alimobrem/openshift-platform-skills"
+  },
+  "license": "MIT",
+  "name": "openshift-platform-skills",
+  "repository": "https://github.com/alimobrem/openshift-platform-skills",
+  "skills": "./skills/",
+  "version": "0.0.1"
+}

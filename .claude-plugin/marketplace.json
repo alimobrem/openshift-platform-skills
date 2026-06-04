@@ -1,0 +1,25 @@
+{
+  "name": "openshift-platform",
+  "owner": {
+    "name": "The OpenShift Platform Skills authors",
+    "email": "openshift-platform-skills@example.com"
+  },
+  "metadata": {
+    "description": "AI skills for OpenShift platform engineering",
+    "version": "0.0.1"
+  },
+  "plugins": [
+    {
+      "name": "platform-skills",
+      "description": "Shipwright, Tekton, Istio, Quay, ESO, delivery flows, DORA metrics",
+      "source": "./",
+      "strict": false,
+      "skills": [
+        "./skills/platform-engineering"
+      ],
+      "agents": [
+        "./agents/claude-code/platform.md"
+      ]
+    }
+  ]
+}
