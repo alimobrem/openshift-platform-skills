@@ -5,9 +5,10 @@
 <p align="center">
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License"></a>
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
-  <img src="https://img.shields.io/badge/OpenShift-4.14+-EE0000.svg" alt="OpenShift 4.14+">
-  <img src="https://img.shields.io/badge/Tekton-v0.60+-2B7DE9.svg" alt="Tekton v0.60+">
-  <img src="https://img.shields.io/badge/Istio-1.24+-466BB0.svg" alt="Istio 1.24+">
+  <img src="https://img.shields.io/badge/OpenShift-4.22+-EE0000.svg" alt="OpenShift 4.22+">
+  <img src="https://img.shields.io/badge/OSSM-3.0+-466BB0.svg" alt="OSSM 3.0+">
+  <img src="https://img.shields.io/badge/Pipelines-1.20+-2B7DE9.svg" alt="Pipelines 1.20+">
+  <img src="https://img.shields.io/badge/Builds-1.0+-EF7B4D.svg" alt="Builds 1.0+">
 </p>
 
 <p align="center">
@@ -87,17 +88,33 @@ cp agents/github-copilot/platform-engineering.agent.md .github/copilot/
 <details>
 <summary><b>Prerequisites</b></summary>
 
-Required:
-- `kubectl` or `oc` for Kubernetes/OpenShift cluster interaction
+**Target platform:** OpenShift Container Platform **4.22 or later**
 
-Optional (enhances capabilities):
+**Required:**
+- `oc` CLI (OpenShift client) — cluster interaction, resource management
+
+**Red Hat Operators (install via OperatorHub):**
+
+| Operator | Subscription Name | Catalog | Purpose |
+|----------|------------------|---------|---------|
+| Red Hat OpenShift Pipelines | `openshift-pipelines-operator-rh` | `redhat-operators` | Tekton pipelines, triggers, chains |
+| Builds for Red Hat OpenShift | `openshift-builds-operator` | `redhat-operators` | Shipwright container builds |
+| Red Hat OpenShift Service Mesh 3 | `servicemeshoperator3` | `redhat-operators` | Istio control plane (Sail operator) |
+| Red Hat Quay | `quay-operator` | `redhat-operators` | Container image registry + Clair scanning |
+| External Secrets Operator | `external-secrets-operator` | `redhat-operators` | Secrets sync from Vault/AWS/Azure/GCP |
+| Kiali | `kiali-ossm` | `redhat-operators` | Service mesh observability dashboard |
+| Red Hat build of OpenTelemetry | `opentelemetry-product` | `redhat-operators` | Distributed tracing |
+
+All operators use the `redhat-operators` catalog — no community or upstream operators.
+
+**Optional CLI tools (enhances capabilities):**
 - `tkn` — Tekton pipeline inspection and triggering
 - `istioctl` — Istio mesh analysis and debugging
+- `argocd` — Argo CD operations (if using argo-skills alongside)
 - `yq` — YAML parsing
 - `skopeo` — container image inspection
-- `cosign` — image signature verification
 
-Install all on macOS:
+Install CLI tools on macOS:
 ```shell
 brew bundle
 ```
@@ -105,6 +122,8 @@ brew bundle
 </details>
 
 ## Usage Guide
+
+> **Full guide with all example prompts:** [docs/USER_GUIDE.md](docs/USER_GUIDE.md)
 
 ### How Routing Works
 
