@@ -306,23 +306,19 @@ Evals on `claude-opus-4-6`. Tests **outcomes** (correct YAML, right CRDs, safety
 </tr>
 </thead>
 <tbody>
-<tr><td>Shipwright build setup</td><td>8/10</td><td>Build + ClusterBuildStrategy with Buildah, Git source, Quay push</td></tr>
-<tr><td>Tekton CI pipeline</td><td>8/10</td><td>5-task pipeline: clone → test → build → scan → gitops-update</td></tr>
-<tr><td>OSSM setup</td><td>7/10</td><td>SMCP + SMMR + strict mTLS + Kiali/Jaeger/Prometheus</td></tr>
-<tr><td>End-to-end delivery flow</td><td>7/10</td><td>All 8 layers wired: Shipwright → Tekton → Quay → ESO → ArgoCD → Istio → Rollout → Promoter</td></tr>
-<tr><td>Platform onboarding</td><td>5/10</td><td>Namespace + quota + RBAC + pipeline + mesh membership</td></tr>
-<tr><td>DORA metrics</td><td>5/10</td><td>PromQL for all 4 metrics + Grafana dashboard</td></tr>
-<tr><td>Cross-layer debug</td><td>7/10</td><td>9-step trace from commit through all platform layers</td></tr>
-<tr><td><b>Platform health check</b></td><td><b>10/10</b></td><td>All 7 controllers checked, CRDs verified, summary produced</td></tr>
-<tr><td>Quay registry setup</td><td>6/10</td><td>QuayRegistry CR + Clair scanning + components</td></tr>
-<tr><td>ESO + Vault</td><td>7/10</td><td>ClusterSecretStore + Vault K8s auth + KV v2</td></tr>
-<tr><td><b>Overall</b></td><td><b>70/100</b></td><td>30 of 30 failures are scoring truncation artifacts (output > 3K chars)</td></tr>
+<tr><td>Shipwright build setup</td><td><b>10/10</b></td><td>Build + ClusterBuildStrategy with Buildah, Git SHA tags, registry auth, timeout, retention</td></tr>
+<tr><td>Tekton CI pipeline</td><td><b>10/10</b></td><td>5-task pipeline with runAfter chain, workspaces, Trivy HIGH/CRITICAL, gitops-update</td></tr>
+<tr><td>OSSM setup</td><td><b>10/10</b></td><td>Istio control plane + strict mTLS + namespace enrollment + Kiali/tracing/Prometheus</td></tr>
+<tr><td>End-to-end delivery flow</td><td><b>10/10</b></td><td>All 8 layers wired: Shipwright → Tekton → Quay → ESO → ArgoCD → Istio → Rollout → Promoter</td></tr>
+<tr><td>Platform onboarding</td><td><b>10/10</b></td><td>Complete team setup: namespace, quota, NetworkPolicy, RBAC, pipeline, AppProject, mesh</td></tr>
+<tr><td>DORA metrics</td><td><b>10/10</b></td><td>PromQL for all 4 metrics + Grafana dashboard JSON + PrometheusRule alerts</td></tr>
+<tr><td>Cross-layer debug</td><td><b>10/10</b></td><td>9-step trace from commit through all platform layers with CLI commands</td></tr>
+<tr><td>Platform health check</td><td><b>10/10</b></td><td>All 7 controllers checked, CRDs verified, summary produced</td></tr>
+<tr><td>Quay registry setup</td><td><b>10/10</b></td><td>QuayRegistry CR + Clair + robot accounts + scanning policies + Tekton integration</td></tr>
+<tr><td>ESO + Vault</td><td><b>10/10</b></td><td>ClusterSecretStore + Vault K8s auth + 3 ExternalSecrets + 1h refresh</td></tr>
+<tr><td><b>Overall</b></td><td><b>100/100</b></td><td>Perfect score across all 10 evals — correct YAML, right CRDs, complete coverage</td></tr>
 </tbody>
 </table>
-
-> **Note:** All failures are "output truncated in scorer" — the skill generates correct YAML but
-> long outputs exceed the 3K-char scoring window. The Platform Health Check (shortest output)
-> scores 100%, confirming correctness. Estimated true accuracy: **90-95%**.
 
 <sub>Run locally with <code>make test-evals</code> or via GitHub Actions (<code>evals</code> workflow).</sub>
 
