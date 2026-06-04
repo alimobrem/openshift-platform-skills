@@ -169,7 +169,7 @@ When using External Secrets Operator, the robot token lives in Vault/AWS/etc.
 and ESO creates the dockerconfigjson Secret automatically:
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: quay-push-secret

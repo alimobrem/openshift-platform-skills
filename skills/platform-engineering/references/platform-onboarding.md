@@ -43,6 +43,7 @@ metadata:
     app: "{{ app }}"
     env: dev
     managed-by: platform-onboarding
+    istio-injection: enabled
 ---
 apiVersion: v1
 kind: ResourceQuota
