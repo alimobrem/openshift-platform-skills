@@ -111,25 +111,40 @@ When the user says "no mesh," generate Rollouts without `trafficRouting`.
 
 ## Prerequisites
 
+**Target platform:** OpenShift Container Platform **4.22 or later**.
+
+**Required Red Hat Operators** (all from `redhat-operators` catalog — never use community or upstream):
+
+| Operator | Subscription Name | What It Provides |
+|----------|------------------|------------------|
+| Red Hat OpenShift Pipelines | `openshift-pipelines-operator-rh` | Tekton Pipelines, Triggers, Chains, Results |
+| Builds for Red Hat OpenShift | `openshift-builds-operator` | Shipwright Builds + ClusterBuildStrategies |
+| Red Hat OpenShift Service Mesh 3 | `servicemeshoperator3` | Istio control plane via Sail operator |
+| Red Hat Quay | `quay-operator` | Container registry + Clair scanning |
+| External Secrets Operator | `external-secrets-operator` | Secret sync from Vault/AWS/Azure/GCP |
+| Kiali | `kiali-ossm` | Service mesh dashboard |
+| Red Hat build of OpenTelemetry | `opentelemetry-product` | Distributed tracing |
+
 Before any cluster operation, check the environment:
 
 ```bash
 # Required
-command -v kubectl >/dev/null && echo "kubectl: $(kubectl version --client -o json 2>/dev/null | grep gitVersion)" || echo "kubectl: MISSING"
+command -v oc >/dev/null && echo "oc: $(oc version --client 2>/dev/null)" || echo "oc: MISSING"
 
-# Platform detection
-kubectl api-resources --api-group=route.openshift.io 2>/dev/null && echo "OpenShift" || echo "Kubernetes"
+# Cluster context and version
+oc config current-context
+oc version 2>/dev/null || echo "WARN: cluster not reachable"
 
-# Optional -- enhances capabilities
-command -v oc >/dev/null && echo "oc: $(oc version --client 2>/dev/null)" || echo "oc: not installed"
+# Verify OCP version >= 4.22
+oc get clusterversion -o jsonpath='{.items[0].status.desired.version}'
+
+# Check installed operators
+oc get csv -n openshift-operators --no-headers 2>/dev/null | grep -E 'pipelines|builds|servicemesh|quay|external-secrets|kiali|opentelemetry'
+
+# Optional CLI tools
 command -v tkn >/dev/null && echo "tkn: $(tkn version 2>/dev/null | head -1)" || echo "tkn: not installed"
 command -v istioctl >/dev/null && echo "istioctl: $(istioctl version --remote=false 2>/dev/null)" || echo "istioctl: not installed"
-command -v helm >/dev/null && echo "helm: $(helm version --short 2>/dev/null)" || echo "helm: not installed"
-command -v argocd >/dev/null && echo "argocd: $(argocd version --client -o json 2>/dev/null | grep Version)" || echo "argocd: not installed"
-
-# Cluster context
-kubectl config current-context
-kubectl cluster-info --request-timeout=5s 2>/dev/null || echo "WARN: cluster not reachable"
+command -v argocd >/dev/null && echo "argocd: available" || echo "argocd: not installed"
 ```
 
 If the cluster is not reachable, stop and report the error. Do not generate apply commands
