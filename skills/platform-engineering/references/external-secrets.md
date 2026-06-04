@@ -10,7 +10,10 @@ Default secrets management for the platform. Swappable with HashiCorp Vault
 
 ## Operator Install
 
-### OLM Subscription
+### OLM Subscription (Red Hat — recommended for OpenShift)
+
+The **External Secrets Operator for Red Hat OpenShift** is GA and included with OCP 4.19+.
+Use the Red Hat-supported operator, not the community version.
 
 ```yaml
 apiVersion: operators.coreos.com/v1alpha1
@@ -22,30 +25,44 @@ spec:
   channel: stable
   installPlanApproval: Automatic
   name: external-secrets-operator
-  source: community-operators
+  source: redhat-operators
   sourceNamespace: openshift-marketplace
+```
+
+After install, create the `OperatorConfig` CR to deploy ESO:
+
+```yaml
+apiVersion: operator.external-secrets.io/v1
+kind: OperatorConfig
+metadata:
+  name: cluster
+  namespace: external-secrets
+spec: {}
 ```
 
 Verify:
 
 ```bash
-kubectl get csv -n openshift-operators | grep external-secrets
-kubectl get crd secretstores.external-secrets.io
-kubectl get crd externalsecrets.external-secrets.io
+oc get csv -n openshift-operators | grep external-secrets
+oc get crd secretstores.external-secrets.io
+oc get crd externalsecrets.external-secrets.io
+oc get pods -n external-secrets
 ```
 
-### Helm Install (non-OLM clusters)
+### Helm Install (non-OpenShift clusters only)
+
+For vanilla Kubernetes without OLM:
 
 ```bash
 helm repo add external-secrets https://charts.external-secrets.io
-helm repo update
-
 helm install external-secrets external-secrets/external-secrets \
   --namespace external-secrets \
   --create-namespace \
   --set installCRDs=true \
   --wait --timeout 5m
 ```
+
+**Do not use Helm on OpenShift** — use the Red Hat operator above.
 
 ---
 

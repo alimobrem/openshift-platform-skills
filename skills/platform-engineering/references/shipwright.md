@@ -1,5 +1,40 @@
 # Shipwright Builds Reference
 
+## Operator Installation (Builds for Red Hat OpenShift)
+
+The Red Hat-supported distribution of Shipwright is **Builds for Red Hat OpenShift** (GA November 2025).
+
+```yaml
+apiVersion: operators.coreos.com/v1alpha1
+kind: Subscription
+metadata:
+  name: openshift-builds-operator
+  namespace: openshift-operators
+spec:
+  channel: stable
+  installPlanApproval: Automatic
+  name: openshift-builds-operator
+  source: redhat-operators
+  sourceNamespace: openshift-marketplace
+```
+
+After the operator installs, create the `ShipwrightBuild` CR to deploy the build controller:
+
+```yaml
+apiVersion: operator.shipwright.io/v1alpha1
+kind: ShipwrightBuild
+metadata:
+  name: openshift-builds
+spec:
+  targetNamespace: openshift-builds
+```
+
+Verify:
+```bash
+oc get csv -n openshift-operators | grep builds
+oc get pods -n openshift-builds
+```
+
 ## CRDs
 
 | CRD | API Group | Description |
