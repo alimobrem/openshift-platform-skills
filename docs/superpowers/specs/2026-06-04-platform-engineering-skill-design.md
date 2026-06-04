@@ -232,60 +232,60 @@ Gateway, PeerAuthentication, AuthorizationPolicy, RequestAuthentication
 - Cross-layer issues (pipeline succeeds but sync doesn't happen, sync works but traffic doesn't shift)
 - Debug commands per tool (CLI + kubectl fallback)
 
-## Use Cases (29 total)
+## Use Cases (37 total)
 
 ### Build Layer (5)
-1. Set up container builds with Shipwright
-2. Create BuildRun from Git source
-3. Custom BuildStrategy (tests before build)
-4. Debug failing builds
-5. Migrate BuildConfig → Shipwright
+1. **Set up container builds** — configure Shipwright with Buildah strategy, source-to-image flow
+2. **Create BuildRun from source** — build from Git repo, push image to registry with proper auth
+3. **Custom BuildStrategy** — create strategy that runs unit tests before building the image
+4. **Debug failing builds** — trace BuildRun failures (push denied, OOM, source clone errors)
+5. **Migrate BuildConfig → Shipwright** — convert legacy OpenShift BuildConfigs to Shipwright Builds
 
 ### Pipeline Layer (6)
-6. Create CI pipeline (clone→test→build→scan→push→gitops-update)
-7. Event-driven triggers (GitHub webhook → PipelineRun)
-8. Pipeline-to-GitOps handoff (commit image tag or trigger sync)
-9. Reusable task catalog (ClusterTasks from Tekton Hub)
-10. Debug pipeline failures
-11. Pipeline RBAC (ServiceAccount, registry push, Git write)
+6. **Create CI pipeline** — Tekton pipeline: git-clone → test → build (Shipwright) → scan (Trivy) → push (Quay) → gitops-update
+7. **Event-driven triggers** — GitHub/GitLab webhook → Tekton EventListener → TriggerTemplate → PipelineRun
+8. **Pipeline-to-GitOps handoff** — Tekton task commits new image tag to GitOps repo, Argo CD picks it up
+9. **Reusable task catalog** — install ClusterTasks from Tekton Hub (git-clone, buildah, trivy-scanner, argocd-sync)
+10. **Debug pipeline failures** — trace stuck/failed PipelineRuns, inspect task logs, workspace issues
+11. **Pipeline RBAC** — ServiceAccount with Quay push secret (from ESO), Git write token, Argo CD API access
 
 ### Registry Layer (4)
-30. Set up Quay on OpenShift with robot accounts for pipeline push
-31. Configure image scanning and vulnerability policies
-32. Set up registry mirroring for air-gapped clusters
-33. Swap registry — generate equivalent config for Harbor/ECR/internal
+12. **Set up Quay** — install Quay operator, create org, robot accounts, pipeline push secrets
+13. **Image scanning policies** — configure Clair scanning, set vulnerability thresholds, block unscanned images
+14. **Registry mirroring** — set up Quay mirror for air-gapped clusters, geo-replication for multi-region
+15. **Swap registry** — generate equivalent config for Harbor, internal OpenShift registry, ECR, or GCR
 
 ### Secrets Layer (4)
-34. Set up External Secrets Operator with Vault backend
-35. Create ExternalSecrets for pipeline credentials, registry auth, Git tokens
-36. Configure secret rotation with refreshInterval
-37. Swap secrets manager — generate equivalent for Sealed Secrets or SOPS
+16. **Set up External Secrets Operator** — install ESO, create SecretStore with Vault/AWS/Azure/GCP backend
+17. **Create ExternalSecrets** — generate secrets for pipeline creds, Quay robot tokens, Git SSH keys, Argo CD repo auth, mesh TLS certs
+18. **Configure secret rotation** — set refreshInterval for automatic rotation, verify refresh works
+19. **Swap secrets manager** — generate equivalent for Vault Agent Injector, Sealed Secrets (kubeseal), or SOPS
 
-### GitOps Layer (3, delegates to argo-skills)
-12. Pipeline → GitOps integration
-13. Image updater as alternative
-14. ApplicationSet per pipeline output
+### GitOps Layer (3 — delegates to argo-skills)
+20. **Pipeline → GitOps integration** — wire Tekton output to Argo CD sync (image tag commit or API trigger)
+21. **Image updater as alternative** — use Argo CD Image Updater to poll Quay instead of pipeline-based updates
+22. **ApplicationSet per pipeline output** — generate Applications from pipeline-built artifacts across environments
 
 ### Mesh Layer (7)
-15. Install and configure OSSM
-16. mTLS enforcement
-17. Traffic routing (VirtualService weight/header)
-18. Rollout + Istio canary
-19. Observability (Kiali, Jaeger)
-20. Debug mesh issues (503s, connection refused)
-21. Circuit breaking + retries
+23. **Install and configure OSSM** — ServiceMeshControlPlane, ServiceMeshMemberRoll, add namespaces to mesh
+24. **mTLS enforcement** — PeerAuthentication strict mode, verify all service-to-service traffic is encrypted
+25. **Traffic routing** — VirtualService rules for weight-based, header-based, and cookie-based routing
+26. **Rollout + Istio canary** — Argo Rollout with Istio VirtualService for progressive traffic shifting
+27. **Observability** — configure Kiali dashboard, Jaeger tracing, Prometheus mesh metrics
+28. **Debug mesh issues** — diagnose 503s, connection refused, mTLS handshake failures, missing sidecars
+29. **Circuit breaking + retries** — DestinationRule connectionPool limits, outlierDetection, retry policies
 
 ### Delivery & Promotion (5)
-22. End-to-end delivery flow setup
-23. Environment promotion with gitops-promoter
-24. DORA metrics setup
-25. Platform onboarding (new team/app)
-26. Disaster recovery
+30. **End-to-end delivery flow** — wire all layers: push → Shipwright build → Tekton pipeline → Quay → ESO secrets → Argo CD sync → Istio routing → Rollout canary → promoter gates → production
+31. **Environment promotion** — gitops-promoter with commit status gating from pipeline results + Argo CD health + Istio error rate
+32. **DORA metrics** — Prometheus queries for deployment frequency, lead time, change failure rate, MTTR from Argo CD + Tekton + Istio data sources
+33. **Platform onboarding** — onboard new team: namespace, Quay org + robot account, ESO SecretStore, Tekton pipeline, Argo CD AppProject + Application, mesh membership, RBAC
+34. **Disaster recovery** — restore full platform from Git: operators → Quay → ESO → Argo CD → pipelines → mesh → apps
 
 ### Audit & Debug (3)
-27. Platform health check (all components)
-28. Security audit (pipelines, mesh, GitOps)
-29. Trace delivery failure across layers
+35. **Platform health check** — check all components across all layers: Shipwright controller, Tekton controller, Quay, ESO, Argo CD, Istio control plane, Rollouts controller
+36. **Security audit** — audit pipeline RBAC, Quay scanning policies, ESO secret scope, mesh mTLS enforcement, GitOps security gaps
+37. **Trace delivery failure** — "my change isn't in production" — trace from Git commit through pipeline → build → registry → GitOps → sync → mesh → rollout → promotion
 
 ## Evals (10 scenarios)
 
