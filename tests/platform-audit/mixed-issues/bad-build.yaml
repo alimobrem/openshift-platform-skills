@@ -1,0 +1,18 @@
+---
+# ISSUES:
+# - Pushes to :latest tag (no versioning, not reproducible)
+# - No BuildStrategy specified (will fail or use unknown default)
+# - No pushSecret for registry authentication
+# - No timeout set
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: app-build
+  namespace: team-beta
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/team-beta/app.git
+  output:
+    image: quay.io/team-beta/app:latest

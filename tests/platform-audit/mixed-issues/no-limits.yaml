@@ -1,0 +1,51 @@
+---
+# ISSUES:
+# - Pipeline tasks have no resource limits (can consume unbounded resources)
+# - No pipeline-level timeout (pipeline can run indefinitely)
+# - No task-level timeouts
+# - No finally block for cleanup
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: unlimited-pipeline
+  namespace: team-delta
+spec:
+  params:
+    - name: repo-url
+      type: string
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      params:
+        - name: url
+          value: $(params.repo-url)
+
+    - name: build
+      taskRef:
+        name: buildah
+        kind: ClusterTask
+      runAfter: ["git-clone"]
+      params:
+        - name: IMAGE
+          value: quay.io/team-delta/app:v1
+
+    - name: integration-test
+      taskRef:
+        name: run-tests
+        kind: ClusterTask
+      runAfter: ["build"]
+---
+apiVersion: tekton.dev/v1
+kind: Task
+metadata:
+  name: run-tests
+  namespace: team-delta
+spec:
+  steps:
+    - name: test
+      image: golang:1.22
+      script: |
+        cd /workspace/source
+        go test ./...

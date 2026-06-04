@@ -1,0 +1,63 @@
+---
+apiVersion: promoter.argoproj.io/v1alpha1
+kind: ScmProvider
+metadata:
+  name: github-provider
+  namespace: argocd
+spec:
+  github:
+    appID: "12345"
+    installationID: "67890"
+  secretRef:
+    name: github-app-secret
+    key: privateKey
+---
+apiVersion: promoter.argoproj.io/v1alpha1
+kind: GitRepository
+metadata:
+  name: payments-repo
+  namespace: argocd
+spec:
+  github:
+    owner: acme-corp
+    name: gitops-config
+  scmProviderRef:
+    name: github-provider
+---
+apiVersion: promoter.argoproj.io/v1alpha1
+kind: PromotionStrategy
+metadata:
+  name: payments-promotion
+  namespace: argocd
+spec:
+  gitRepositoryRef:
+    name: payments-repo
+  activeCommitStatuses:
+    - key: argocd-app-health
+  proposedCommitStatuses:
+    - key: security-scan
+    - key: integration-test
+  environments:
+    - branch: environment/development
+      autoMerge: true
+    - branch: environment/staging
+      autoMerge: true
+      activeCommitStatuses:
+        - key: smoke-test
+    - branch: environment/production
+      autoMerge: false
+      activeCommitStatuses:
+        - key: performance-test
+        - key: manual-approval
+---
+apiVersion: promoter.argoproj.io/v1alpha1
+kind: ArgocdCommitStatus
+metadata:
+  name: payments-health
+  namespace: argocd
+spec:
+  gitRepositoryRef:
+    name: payments-repo
+  applicationRef:
+    name: payments
+  sha: "{{ .sha }}"

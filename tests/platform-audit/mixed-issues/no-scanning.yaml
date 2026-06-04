@@ -1,0 +1,25 @@
+---
+# ISSUES:
+# - Clair component not enabled (no vulnerability scanning)
+# - monitoring disabled (no visibility into registry health)
+# - No image scanning means vulnerable images can be pushed and deployed
+apiVersion: quay.redhat.com/v1
+kind: QuayRegistry
+metadata:
+  name: team-registry
+  namespace: quay-enterprise
+spec:
+  configBundleSecret: quay-config-bundle
+  components:
+    - kind: clair
+      managed: false
+    - kind: postgres
+      managed: true
+    - kind: redis
+      managed: true
+    - kind: objectstorage
+      managed: true
+    - kind: route
+      managed: true
+    - kind: monitoring
+      managed: false

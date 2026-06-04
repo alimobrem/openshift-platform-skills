@@ -1,0 +1,60 @@
+---
+apiVersion: maistra.io/v2
+kind: ServiceMeshControlPlane
+metadata:
+  name: production
+  namespace: istio-system
+spec:
+  version: v2.5
+  security:
+    dataPlane:
+      mtls: true
+    controlPlane:
+      mtls: true
+  tracing:
+    type: Jaeger
+    sampling: 10000
+  addons:
+    kiali:
+      enabled: true
+    jaeger:
+      install:
+        storage:
+          type: Elasticsearch
+    prometheus:
+      enabled: true
+    grafana:
+      enabled: true
+  proxy:
+    resources:
+      requests:
+        cpu: 100m
+        memory: 128Mi
+      limits:
+        cpu: 500m
+        memory: 256Mi
+  gateways:
+    ingress:
+      enabled: true
+      service:
+        type: ClusterIP
+---
+apiVersion: maistra.io/v1
+kind: ServiceMeshMemberRoll
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  members:
+    - acme-payments
+    - acme-frontend
+    - acme-backend
+---
+apiVersion: security.istio.io/v1beta1
+kind: PeerAuthentication
+metadata:
+  name: default
+  namespace: istio-system
+spec:
+  mtls:
+    mode: STRICT

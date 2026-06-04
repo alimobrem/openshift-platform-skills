@@ -1,0 +1,53 @@
+---
+apiVersion: shipwright.io/v1beta1
+kind: ClusterBuildStrategy
+metadata:
+  name: buildah
+spec:
+  steps:
+    - name: build-and-push
+      image: quay.io/buildah/stable:latest
+      command:
+        - /bin/bash
+      args:
+        - -c
+        - |
+          buildah bud --tls-verify=true --layers \
+            -f $(params.dockerfile) -t $(params.shp-output-image) .
+          buildah push --tls-verify=true $(params.shp-output-image)
+      securityContext:
+        capabilities:
+          add: ["SETFCAP"]
+      resources:
+        limits:
+          cpu: "2"
+          memory: 4Gi
+        requests:
+          cpu: 500m
+          memory: 1Gi
+  parameters:
+    - name: dockerfile
+      description: Path to the Dockerfile
+      default: Dockerfile
+---
+apiVersion: shipwright.io/v1beta1
+kind: Build
+metadata:
+  name: payments-build
+  namespace: acme-payments
+spec:
+  source:
+    type: Git
+    git:
+      url: https://github.com/acme-corp/payments.git
+      revision: main
+  strategy:
+    name: buildah
+    kind: ClusterBuildStrategy
+  output:
+    image: quay.io/acme/payments:$(build.name)
+    pushSecret: registry-auth
+  timeout: 30m
+  retention:
+    succeededLimit: 5
+    failedLimit: 3

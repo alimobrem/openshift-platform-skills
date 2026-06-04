@@ -1,0 +1,120 @@
+---
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: pipeline-sa
+  namespace: acme-payments
+secrets:
+  - name: registry-auth
+  - name: git-credentials
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: pipeline-sa-edit
+  namespace: acme-payments
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: edit
+subjects:
+  - kind: ServiceAccount
+    name: pipeline-sa
+    namespace: acme-payments
+---
+apiVersion: tekton.dev/v1
+kind: Pipeline
+metadata:
+  name: payments-ci
+  namespace: acme-payments
+spec:
+  params:
+    - name: repo-url
+      type: string
+      description: Git repository URL
+    - name: revision
+      type: string
+      default: main
+    - name: image-tag
+      type: string
+      description: Image tag to build
+  workspaces:
+    - name: shared-workspace
+    - name: git-credentials
+    - name: registry-credentials
+  tasks:
+    - name: git-clone
+      taskRef:
+        name: git-clone
+        kind: ClusterTask
+      params:
+        - name: url
+          value: $(params.repo-url)
+        - name: revision
+          value: $(params.revision)
+      workspaces:
+        - name: output
+          workspace: shared-workspace
+        - name: basic-auth
+          workspace: git-credentials
+
+    - name: test
+      taskRef:
+        name: golang-test
+        kind: ClusterTask
+      runAfter: ["git-clone"]
+      params:
+        - name: package
+          value: ./...
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: build
+      taskRef:
+        name: shipwright-build
+        kind: ClusterTask
+      runAfter: ["test"]
+      params:
+        - name: build-name
+          value: payments-build
+        - name: image-tag
+          value: $(params.image-tag)
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+
+    - name: scan
+      taskRef:
+        name: trivy-scanner
+        kind: ClusterTask
+      runAfter: ["build"]
+      params:
+        - name: IMAGE
+          value: quay.io/acme/payments:$(params.image-tag)
+        - name: SEVERITY
+          value: "HIGH,CRITICAL"
+      workspaces:
+        - name: manifest-dir
+          workspace: shared-workspace
+
+    - name: gitops-update
+      taskRef:
+        name: git-cli
+        kind: ClusterTask
+      runAfter: ["scan"]
+      params:
+        - name: GIT_SCRIPT
+          value: |
+            git clone https://github.com/acme-corp/gitops-config.git /workspace/gitops
+            cd /workspace/gitops
+            sed -i "s|image: quay.io/acme/payments:.*|image: quay.io/acme/payments:$(params.image-tag)|" \
+              environments/dev/payments/deployment.yaml
+            git add .
+            git commit -m "chore: update payments image to $(params.image-tag)"
+            git push origin main
+      workspaces:
+        - name: source
+          workspace: shared-workspace
+        - name: basic-auth
+          workspace: git-credentials

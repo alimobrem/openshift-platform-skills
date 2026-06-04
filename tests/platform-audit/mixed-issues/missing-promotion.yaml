@@ -1,0 +1,24 @@
+---
+# ISSUES:
+# - Application deployed directly with automated sync and prune
+# - No PromotionStrategy gating promotion between environments
+# - No commit status checks before deployment
+# - Changes go straight to production without staged promotion
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: payments-prod
+  namespace: argocd
+spec:
+  project: default
+  source:
+    repoURL: https://github.com/acme-corp/gitops-config.git
+    targetRevision: main
+    path: environments/production/payments
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: payments-prod
+  syncPolicy:
+    automated:
+      prune: true
+      selfHeal: true
