@@ -3,16 +3,15 @@
 # - PeerAuthentication uses PERMISSIVE mode (should be STRICT)
 # - Allows plaintext traffic alongside mTLS, defeating zero-trust
 # - No AuthorizationPolicy to restrict service-to-service communication
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
+apiVersion: sailoperator.io/v1
+kind: Istio
 metadata:
   name: basic
   namespace: istio-system
 spec:
-  version: v2.5
-  security:
-    dataPlane:
-      mtls: false
+  version: v1.24.3
+  profile: openshift
+  namespace: istio-system
 ---
 apiVersion: security.istio.io/v1beta1
 kind: PeerAuthentication
