@@ -366,6 +366,37 @@ See [AGENTS.md](AGENTS.md) for the repo layout, skill conventions, and eval runn
 
 </details>
 
+## Links
+
+### Red Hat Operators
+
+| Operator | Docs | Source |
+|----------|------|--------|
+| Red Hat OpenShift Pipelines | [Docs](https://docs.redhat.com/en/documentation/red_hat_openshift_pipelines/) | [github.com/openshift-pipelines](https://github.com/openshift-pipelines) |
+| Builds for Red Hat OpenShift | [Docs](https://docs.openshift.com/builds/1.0/about/overview-openshift-builds.html) | [github.com/redhat-openshift-builds](https://github.com/redhat-openshift-builds) |
+| Red Hat OpenShift Service Mesh 3 | [Docs](https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.0/) | [github.com/openshift-service-mesh](https://github.com/openshift-service-mesh) |
+| Red Hat Quay | [Docs](https://docs.redhat.com/en/documentation/red_hat_quay/3/) | [github.com/quay/quay-operator](https://github.com/quay/quay-operator) |
+| External Secrets Operator | [Docs](https://docs.redhat.com/en/documentation/openshift_container_platform/4.19/html/security_and_compliance/external-secrets-operator-for-red-hat-openshift) | [github.com/external-secrets/external-secrets](https://github.com/external-secrets/external-secrets) |
+| Kiali | [Docs](https://docs.redhat.com/en/documentation/red_hat_openshift_service_mesh/3.0/html/kiali/) | [github.com/kiali/kiali](https://github.com/kiali/kiali) |
+| Red Hat build of OpenTelemetry | [Docs](https://docs.redhat.com/en/documentation/red_hat_build_of_opentelemetry/) | [github.com/open-telemetry](https://github.com/open-telemetry) |
+
+### Upstream Projects
+
+| Project | Repo |
+|---------|------|
+| Tekton Pipelines | [github.com/tektoncd/pipeline](https://github.com/tektoncd/pipeline) |
+| Shipwright | [github.com/shipwright-io/build](https://github.com/shipwright-io/build) |
+| Istio / Sail Operator | [github.com/istio-ecosystem/sail-operator](https://github.com/istio-ecosystem/sail-operator) |
+| Argo CD | [github.com/argoproj/argo-cd](https://github.com/argoproj/argo-cd) |
+| Argo Rollouts | [github.com/argoproj/argo-rollouts](https://github.com/argoproj/argo-rollouts) |
+| GitOps Promoter | [github.com/argoproj-labs/gitops-promoter](https://github.com/argoproj-labs/gitops-promoter) |
+
+### Companion Repo
+
+| Repo | Description |
+|------|-------------|
+| [alimobrem/argo-skills](https://github.com/alimobrem/argo-skills) | AI Agent Skills for Argo CD, Rollouts, Workflows, Events — complements this repo for the GitOps layer |
+
 ## Code of Conduct
 
 This project follows the [Contributor Covenant Code of Conduct](CODE_OF_CONDUCT.md).
