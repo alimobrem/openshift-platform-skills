@@ -4,7 +4,7 @@ Default secrets management for the platform. Swappable with HashiCorp Vault
 (direct), Sealed Secrets, or SOPS. See the swap guide table at the end.
 
 **CRDs:** SecretStore, ClusterSecretStore, ExternalSecret, ClusterExternalSecret
-(all `external-secrets.io/v1beta1`)
+(all `external-secrets.io/v1`)
 
 ---
 
@@ -54,7 +54,7 @@ helm install external-secrets external-secrets/external-secrets \
 ### HashiCorp Vault
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: cluster-vault
@@ -99,7 +99,7 @@ vault write auth/kubernetes/role/external-secrets \
 ### AWS Secrets Manager
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: aws-secrets-manager
@@ -126,7 +126,7 @@ annotate the ESO ServiceAccount with the IAM role ARN instead.
 ### Azure Key Vault
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: azure-keyvault
@@ -156,7 +156,7 @@ For Service Principal auth, replace `authType` with `ServicePrincipal` and add:
 ### GCP Secret Manager
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterSecretStore
 metadata:
   name: gcp-secret-manager
@@ -184,7 +184,7 @@ ServiceAccount with the GCP service account email.
 Pull one secret value and create a Kubernetes Secret:
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: db-password
@@ -210,7 +210,7 @@ Transform remote values into a specific Secret format (e.g., dockerconfigjson,
 connection string, TLS):
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: quay-push-secret
@@ -243,7 +243,7 @@ spec:
 Pull all key-value pairs from a single remote secret path:
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: app-config
@@ -268,7 +268,7 @@ All key-value pairs under the remote path become keys in the Kubernetes Secret.
 Replicate a Secret across multiple namespaces:
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ClusterExternalSecret
 metadata:
   name: shared-registry-creds
@@ -320,7 +320,7 @@ Which secrets feed which platform layer:
 ### Argo CD Repository Credentials via ESO
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: argocd-repo-creds
@@ -410,7 +410,7 @@ spec:
 A namespace-scoped SecretStore restricts which namespaces can read from a backend path:
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: team-vault

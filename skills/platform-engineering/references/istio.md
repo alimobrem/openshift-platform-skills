@@ -4,8 +4,8 @@
 
 | Kind | apiVersion | Purpose |
 |------|-----------|---------|
-| ServiceMeshControlPlane | maistra.io/v2 | Deploys and configures the Istio control plane (OSSM only) |
-| ServiceMeshMemberRoll | maistra.io/v1 | Lists namespaces participating in the mesh (OSSM only) |
+| Istio | sailoperator.io/v1 | Manages Istio control plane (replaces SMCP) |
+| IstioCNI | sailoperator.io/v1 | Manages CNI daemonset for traffic redirection |
 | VirtualService | networking.istio.io/v1 | Traffic routing rules (weight, header, cookie matching) |
 | DestinationRule | networking.istio.io/v1 | Subsets, circuit breaking, load balancing, connection pool |
 | Gateway | networking.istio.io/v1 | Ingress gateway for external traffic into the mesh |
@@ -15,102 +15,100 @@
 
 ## OSSM vs Upstream Istio
 
-| Aspect | OSSM (OpenShift) | Upstream Istio |
-|--------|-------------------|---------------|
-| Install method | 3 operators via OLM (Elasticsearch, Jaeger, OSSM) | `istioctl install` or Helm |
-| Control plane | `ServiceMeshControlPlane` CR | `IstioOperator` CR or CLI flags |
-| Namespace enrollment | `ServiceMeshMemberRoll` CR (explicit opt-in) | Label `istio-injection=enabled` (opt-out) |
-| Multi-tenancy | Built-in -- each SMCP is scoped to enrolled namespaces | Requires Istio revision labels |
-| Sidecar injection | Automatic for SMMR members | Label-based on namespace or pod |
-| Observability | Bundled Kiali, Jaeger, Prometheus via SMCP | Separate addons install |
+| Aspect | OSSM 3.0 (OpenShift) | Upstream Istio |
+|--------|----------------------|---------------|
+| Install method | Single operator via OLM (Sail-based) | `istioctl install` or Helm |
+| Control plane | `Istio` CR (sailoperator.io/v1) | `IstioOperator` CR or CLI flags |
+| Namespace enrollment | `istio-injection=enabled` label (same as upstream) | Label `istio-injection=enabled` |
+| Sidecar injection | Label-based on namespace or pod (same as upstream) | Label-based on namespace or pod |
+| Observability | Kiali operator installed separately, OpenTelemetry for tracing, Prometheus | Separate addons install |
 
-**Key difference:** OSSM uses explicit namespace enrollment via SMMR. A namespace NOT in the
-SMMR will never get sidecars injected, regardless of labels.
+**Key difference from OSSM 2.x:** OSSM 3.0 aligns with upstream Istio. Namespace enrollment
+uses the standard `istio-injection=enabled` label, not a ServiceMeshMemberRoll. The Sail
+operator replaces the Maistra-based operator entirely.
 
-## Operator Installation (OSSM)
+## Operator Installation (OSSM 3.0)
 
 ```bash
-# 1. Elasticsearch Operator -- required by Jaeger
-#    OperatorHub: "OpenShift Elasticsearch Operator" -> openshift-operators-redhat
-# 2. Jaeger Operator -- required by OSSM for tracing
-#    OperatorHub: "Red Hat OpenShift distributed tracing platform" -> openshift-distributed-tracing
-# 3. Service Mesh Operator
-#    OperatorHub: "Red Hat OpenShift Service Mesh" -> openshift-operators
+# Single operator: "Red Hat OpenShift Service Mesh" (Sail-based)
+#   OperatorHub: "Red Hat OpenShift Service Mesh" -> openshift-operators
+#
+# Optional: Install Kiali Operator separately for the service mesh console
+#   OperatorHub: "Kiali Operator" -> openshift-operators
+#
+# Optional: OpenTelemetry Collector for distributed tracing
+#   OperatorHub: "Red Hat build of OpenTelemetry" -> openshift-operators
 
 # Verify
-oc get csv -n openshift-operators | grep -E 'servicemesh|jaeger|elasticsearch'
+oc get csv -n openshift-operators | grep -E 'servicemesh|sail|kiali|opentelemetry'
 ```
 
-## ServiceMeshControlPlane -- Production Config
+## Istio CR -- Production Control Plane Config
 
 ```yaml
-apiVersion: maistra.io/v2
-kind: ServiceMeshControlPlane
+apiVersion: sailoperator.io/v1
+kind: Istio
 metadata:
-  name: production
+  name: default
   namespace: istio-system
 spec:
-  version: v2.5                          # Check operator compatibility matrix
-  security:
-    dataPlane: { mtls: true, automtls: true }
-    controlPlane: { mtls: true }
-  proxy:
-    runtime:
-      container:
+  version: v1.24.3                         # OSSM 3.0 ships Istio 1.24; OSSM 3.1 ships 1.26
+  namespace: istio-system
+  values:
+    global:
+      proxy:
         resources:
           requests: { cpu: 100m, memory: 128Mi }
           limits: { cpu: 500m, memory: 256Mi }
-    accessLogging:
-      file: { name: /dev/stdout, encoding: JSON }
-  gateways:
-    ingress:
-      enabled: true
-      runtime:
-        deployment: { replicas: 2 }      # HA for ingress gateway
-      service: { type: ClusterIP }       # OpenShift Routes handle external traffic
-    egress: { enabled: true }
-  tracing:
-    type: Jaeger
-    sampling: 10000                      # 100% = 10000; prod: use 100-1000 (1-10%)
-  addons:
-    kiali: { enabled: true }
-    jaeger:
-      install:
-        storage:
-          type: Elasticsearch            # Production: use Elasticsearch, not Memory
-          elasticsearch:
-            nodeCount: 3
-            storage: { size: 50Gi }
-            redundancyPolicy: SingleRedundancy
-    prometheus: { enabled: true }
-    grafana: { enabled: true }
-  techPreview:
     meshConfig:
+      accessLogFile: /dev/stdout
+      accessLogEncoding: JSON
       defaultConfig:
         holdApplicationUntilProxyStarts: true  # Prevent app start before sidecar ready
+      enableAutoMtls: true                     # Automatic mTLS between mesh services
+    pilot:
+      resources:
+        requests: { cpu: 500m, memory: 2Gi }
+        limits: { cpu: "1", memory: 4Gi }
 ```
 
-## ServiceMeshMemberRoll -- Adding Namespaces
+## IstioCNI CR -- CNI Daemonset
 
 ```yaml
-apiVersion: maistra.io/v1
-kind: ServiceMeshMemberRoll
+apiVersion: sailoperator.io/v1
+kind: IstioCNI
 metadata:
-  name: default                          # Must be named "default"
-  namespace: istio-system                # Same namespace as SMCP
+  name: default
+  namespace: istio-cni
 spec:
-  members:
-    - my-app-dev
-    - my-app-staging
-    - my-app-prod
+  version: v1.24.3                         # Must match the Istio CR version
+  namespace: istio-cni
 ```
 
-After adding a namespace, restart pods to get sidecar injection:
+## Namespace Enrollment -- Adding Namespaces to the Mesh
+
+OSSM 3.0 uses the standard upstream Istio label for namespace enrollment:
 
 ```bash
+# Enroll a namespace into the mesh
+oc label namespace my-app-dev istio-injection=enabled
+
+# Verify the label
+oc get namespace my-app-dev --show-labels | grep istio
+
+# Restart pods to get sidecar injection
 oc rollout restart deployment -n my-app-dev
+
 # Verify: each pod should show istio-proxy container
 oc get pods -n my-app-dev -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{.spec.containers[*].name}{"\n"}{end}'
+```
+
+To opt out a specific pod from injection:
+
+```yaml
+metadata:
+  annotations:
+    sidecar.istio.io/inject: "false"
 ```
 
 ## Gateway -- External Traffic Ingress
@@ -353,14 +351,15 @@ spec:
 
 ## Observability
 
-### Kiali and Jaeger Access
+### Kiali and Tracing Access
 
 ```bash
-# Kiali dashboard (enabled via SMCP addons.kiali.enabled)
+# Kiali dashboard (installed via separate Kiali Operator)
 oc get route kiali -n istio-system -o jsonpath='{.spec.host}'
 
-# Jaeger tracing UI
-oc get route jaeger -n istio-system -o jsonpath='{.spec.host}'
+# Distributed tracing via OpenTelemetry Collector (replaces Jaeger in OSSM 3.0)
+# Configure the OpenTelemetry Collector CR in the tracing namespace
+oc get opentelemetrycollector -n openshift-distributed-tracing
 
 # Vanilla K8s: kubectl port-forward svc/kiali -n istio-system 20001:20001
 ```
@@ -514,19 +513,20 @@ AnalysisTemplate queries Prometheus -> abort + rollback if success rate < 95%.
 
 | # | Mistake | Symptom | Fix |
 |---|---------|---------|-----|
-| 1 | Namespace not in SMMR | No sidecar, Kiali shows no graph | Add to SMMR members, `oc rollout restart deployment -n <ns>` |
+| 1 | Namespace missing `istio-injection=enabled` label | No sidecar, Kiali shows no graph | `oc label namespace <ns> istio-injection=enabled && oc rollout restart deployment -n <ns>` |
 | 2 | mTLS mode mismatch | `connection reset by peer` | Ensure both sides have sidecars + matching PeerAuthentication mode |
 | 3 | VirtualService host mismatch | 404, traffic goes nowhere | `hosts` must match Kubernetes Service name exactly |
 | 4 | DestinationRule subset label mismatch | 503, NR in Kiali | Subset labels must match actual pod labels |
 | 5 | Gateway TLS secret missing | TLS handshake error on 443 | `credentialName` secret must exist in `istio-system` namespace |
 | 6 | Rollout route name mismatch | `VirtualService does not contain route` | Rollout `routes: [primary]` must match VS `http[].name: primary` |
-| 7 | Pods deployed before SMMR update | No sidecar on existing pods | `oc rollout restart deployment -n <ns>` after SMMR change |
+| 7 | Pods deployed before labeling namespace | No sidecar on existing pods | `oc rollout restart deployment -n <ns>` after labeling namespace |
+| 8 | IstioCNI version mismatch with Istio CR | CNI plugin errors, pod scheduling failures | `IstioCNI` version must match `Istio` CR version exactly |
 
 ## Debug Commands
 
 ```bash
 # Control plane health
-oc get smcp -n istio-system && oc get pods -n istio-system
+oc get istio -n istio-system && oc get istiocni -n istio-cni && oc get pods -n istio-system
 
 # Sidecar status
 oc get pods -n <ns> -o jsonpath='{range .items[*]}{.metadata.name}{"\t"}{range .spec.containers[*]}{.name}{" "}{end}{"\n"}{end}'

@@ -213,18 +213,18 @@ Before executing any destructive operation, verify:
 | EventListener | triggers.tekton.dev/v1beta1 | Tekton Triggers |
 | TriggerBinding | triggers.tekton.dev/v1beta1 | Tekton Triggers |
 | TriggerTemplate | triggers.tekton.dev/v1beta1 | Tekton Triggers |
-| ServiceMeshControlPlane | maistra.io/v2 | OSSM |
-| ServiceMeshMemberRoll | maistra.io/v1 | OSSM |
+| Istio | sailoperator.io/v1 | OSSM |
+| IstioCNI | sailoperator.io/v1 | OSSM |
 | VirtualService | networking.istio.io/v1 | Istio |
 | DestinationRule | networking.istio.io/v1 | Istio |
 | Gateway | networking.istio.io/v1 | Istio |
 | PeerAuthentication | security.istio.io/v1 | Istio |
 | AuthorizationPolicy | security.istio.io/v1 | Istio |
 | QuayRegistry | quay.redhat.com/v1 | Quay |
-| SecretStore | external-secrets.io/v1beta1 | ESO |
-| ClusterSecretStore | external-secrets.io/v1beta1 | ESO |
-| ExternalSecret | external-secrets.io/v1beta1 | ESO |
-| ClusterExternalSecret | external-secrets.io/v1beta1 | ESO |
+| SecretStore | external-secrets.io/v1 | ESO |
+| ClusterSecretStore | external-secrets.io/v1 | ESO |
+| ExternalSecret | external-secrets.io/v1 | ESO |
+| ClusterExternalSecret | external-secrets.io/v1 | ESO |
 | PromotionStrategy | promoter.argoproj.io/v1alpha1 | gitops-promoter |
 | ChangeTransferPolicy | promoter.argoproj.io/v1alpha1 | gitops-promoter |
 | CommitStatus | promoter.argoproj.io/v1alpha1 | gitops-promoter |
@@ -237,7 +237,7 @@ Before executing any destructive operation, verify:
 | Pipelines, Tasks, Triggers, Pipeline-as-Code, CI patterns, RBAC | `references/tekton.md` | Questions about CI/CD pipelines, Tekton CRDs, OpenShift Pipelines |
 | Quay operator, orgs, robot accounts, Clair scanning, mirroring, swap guide | `references/quay.md` | Questions about image registry, scanning, registry auth |
 | ESO install, SecretStore backends, ExternalSecret patterns, rotation, swap guide | `references/external-secrets.md` | Questions about secrets management, Vault, sealed secrets |
-| OSSM install, SMCP, mTLS, traffic routing, Kiali, circuit breaking | `references/istio.md` | Questions about service mesh, traffic management, mTLS |
+| OSSM install, Istio CR, mTLS, traffic routing, Kiali, circuit breaking | `references/istio.md` | Questions about service mesh, traffic management, mTLS |
 | Golden path, variant flows, wiring diagram, secrets flow, 3-env delivery | `references/delivery-flows.md` | Questions about end-to-end delivery, full platform setup |
 | Team onboarding, namespace setup, self-service, guard rails | `references/platform-onboarding.md` | Questions about onboarding teams or applications |
 | DORA definitions, PromQL queries, Grafana dashboards, PrometheusRule alerts | `references/dora-metrics.md` | Questions about metrics, deployment frequency, MTTR |
@@ -254,8 +254,8 @@ Before executing any destructive operation, verify:
 3. **ESO ExternalSecret with wrong SecretStore kind.** Using `kind: SecretStore` when
    the store is `ClusterSecretStore` (or vice versa) causes "store not found" errors.
 
-4. **OSSM ServiceMeshMemberRoll missing the application namespace.** The namespace
-   must appear in the SMMR `members` list or Istio sidecars will not be injected.
+4. **Namespace missing `istio-injection=enabled` label.** Without this label,
+   Istio sidecars will not be injected into pods in the namespace.
 
 5. **Pipeline pushes image but doesn't update the GitOps repo.** The pipeline succeeds
    but no deployment happens because the image tag in Git is stale. Always include a
@@ -283,7 +283,7 @@ Before executing any destructive operation, verify:
 
 | Scenario | Behavior |
 |----------|----------|
-| Not an OpenShift cluster (vanilla K8s) | Detect with `kubectl api-resources --api-group=route.openshift.io`. If missing, skip OSSM-specific CRDs (SMCP, SMMR), use upstream Istio CRDs directly, replace `oc` with `kubectl`, and warn that Quay operator may not be available (suggest Harbor or ECR). |
+| Not an OpenShift cluster (vanilla K8s) | Detect with `kubectl api-resources --api-group=route.openshift.io`. If missing, skip OSSM-specific CRDs (Istio CR, IstioCNI), use upstream Istio CRDs directly, replace `oc` with `kubectl`, and warn that Quay operator may not be available (suggest Harbor or ECR). |
 | Missing operators | Check for CRDs before generating YAML: `kubectl api-resources --api-group=<group>`. If the operator is not installed, report which operator is missing and provide install instructions before proceeding. |
 | Mixed tooling (e.g., Shipwright + Tekton Buildah in same cluster) | Ask the user which build method to use for the target application. Do not assume. If both exist, note the overlap and recommend consolidating. |
 | SOPS-encrypted secrets (not ESO) | Generate Kustomize `secretGenerator` with SOPS-encrypted files. Configure Argo CD with `kustomize.buildOptions: --enable-alpha-plugins --enable-exec` and the SOPS decryption plugin. Do not mix SOPS and ESO in the same namespace without explicit user intent. |

@@ -23,7 +23,7 @@ to go from zero to first deploy. The checklist:
 | 9 | Tekton EventListener + Triggers | Webhook-driven pipeline execution |
 | 10 | Argo CD AppProject | Scoped RBAC — what repos, clusters, and namespaces the team can deploy to |
 | 11 | Argo CD Application | GitOps deployment for the team's first app |
-| 12 | ServiceMeshMember | Enrolls the namespace into the mesh for mTLS and traffic management |
+| 12 | Namespace label `istio-injection=enabled` | Enrolls the namespace into the mesh for mTLS and traffic management |
 | 13 | RoleBinding | Binds the team's group to namespace admin role |
 | 14 | Pipeline ServiceAccount | SA with linked secrets for registry push, git access |
 
@@ -212,7 +212,7 @@ curl -s -X PUT "${QUAY_API}/repository/{{ team }}/{{ app }}/permissions/user/{{ 
 ### ESO SecretStore for the Team
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: SecretStore
 metadata:
   name: team-vault
@@ -236,7 +236,7 @@ metadata:
   name: eso-sa
   namespace: "{{ team }}-{{ app }}-dev"
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: quay-push-creds
@@ -267,7 +267,7 @@ spec:
         key: ci/{{ team }}/quay-robot
         property: auth
 ---
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: git-pat-token
@@ -445,18 +445,26 @@ spec:
         maxDuration: 1m
 ```
 
-### ServiceMeshMember
+### Mesh Enrollment (Namespace Label)
+
+```bash
+# OSSM 3.0 uses the standard Istio label for namespace enrollment
+oc label namespace "{{ team }}-{{ app }}-dev" istio-injection=enabled
+
+# Or declaratively in the Namespace manifest:
+```
 
 ```yaml
-apiVersion: maistra.io/v1
-kind: ServiceMeshMember
+apiVersion: v1
+kind: Namespace
 metadata:
-  name: default
-  namespace: "{{ team }}-{{ app }}-dev"
-spec:
-  controlPlaneRef:
-    namespace: istio-system
-    name: basic
+  name: "{{ team }}-{{ app }}-dev"
+  labels:
+    team: "{{ team }}"
+    app: "{{ app }}"
+    env: dev
+    managed-by: platform-onboarding
+    istio-injection: enabled
 ```
 
 ### RBAC (RoleBinding for Team Group)
@@ -586,7 +594,6 @@ gitops-platform/
 │   │   ├── resourcequota.yaml
 │   │   ├── limitrange.yaml
 │   │   ├── networkpolicy.yaml
-│   │   ├── servicemeshmember.yaml
 │   │   ├── rolebinding.yaml
 │   │   ├── pipeline-sa.yaml
 │   │   ├── secretstore.yaml
@@ -610,7 +617,6 @@ resources:
   - resourcequota.yaml
   - limitrange.yaml
   - networkpolicy.yaml
-  - servicemeshmember.yaml
   - rolebinding.yaml
   - pipeline-sa.yaml
   - secretstore.yaml
@@ -666,11 +672,12 @@ patches:
         path: /spec/provider/vault/auth/kubernetes/role
         value: payments-eso
   - target:
-      kind: ServiceMeshMember
+      kind: Namespace
+      name: TEAM_PLACEHOLDER
     patch: |
-      - op: replace
-        path: /metadata/namespace
-        value: payments-payment-api-dev
+      - op: add
+        path: /metadata/labels/istio-injection
+        value: enabled
 ```
 
 ---
@@ -771,8 +778,8 @@ spec:
       kind: LimitRange
     - group: networking.k8s.io
       kind: NetworkPolicy
-    - group: maistra.io
-      kind: ServiceMeshMember
+    - group: sailoperator.io
+      kind: Istio
     - group: security.istio.io
       kind: PeerAuthentication
 

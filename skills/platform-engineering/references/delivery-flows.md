@@ -146,7 +146,7 @@ Tekton + Shipwright + Quay + ESO + Argo CD + Istio + Rollouts + gitops-promoter.
 
 **Differences from golden path:**
 - No VirtualService, DestinationRule, or Gateway CRDs
-- No ServiceMeshControlPlane or ServiceMeshMemberRoll
+- No Istio CR, IstioCNI, or `istio-injection` namespace labels
 - Rollout uses replica-based canary instead of traffic-weighted canary
 - Canary accuracy depends on replica count (5 replicas = 20% granularity minimum)
 - No header/cookie-based routing for testing
@@ -246,7 +246,7 @@ or Secret feeds which component and how to provision it.
 ### ESO ExternalSecret for Pipeline Credentials
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: quay-push-creds
@@ -553,7 +553,7 @@ spec:
 ### Quay Push Secret (via ESO)
 
 ```yaml
-apiVersion: external-secrets.io/v1beta1
+apiVersion: external-secrets.io/v1
 kind: ExternalSecret
 metadata:
   name: quay-push-creds

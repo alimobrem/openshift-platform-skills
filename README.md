@@ -7,7 +7,7 @@
   <a href="CONTRIBUTING.md"><img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs Welcome"></a>
   <img src="https://img.shields.io/badge/OpenShift-4.14+-EE0000.svg" alt="OpenShift 4.14+">
   <img src="https://img.shields.io/badge/Tekton-v0.60+-2B7DE9.svg" alt="Tekton v0.60+">
-  <img src="https://img.shields.io/badge/Istio-1.20+-466BB0.svg" alt="Istio 1.20+">
+  <img src="https://img.shields.io/badge/Istio-1.24+-466BB0.svg" alt="Istio 1.24+">
 </p>
 
 <p align="center">

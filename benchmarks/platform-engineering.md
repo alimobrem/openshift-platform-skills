@@ -23,7 +23,7 @@ Model: `claude-opus-4-6`
 **Key behaviors observed:**
 - Shipwright: correct Build + ClusterBuildStrategy with Buildah, Git SHA tags, registry auth, timeout, retention
 - Tekton: full 5-task pipeline with runAfter chain, workspaces, Trivy severity filtering, gitops-update task
-- OSSM: ServiceMeshControlPlane + SMMR + strict mTLS PeerAuthentication + Kiali/Jaeger/Prometheus
+- OSSM: Istio CR + IstioCNI + strict mTLS PeerAuthentication + Kiali/OpenTelemetry/Prometheus
 - E2E: all 8 layers wired (Shipwright → Tekton → Quay → ESO → Argo CD → Istio → Rollout → Promoter)
 - Onboarding: complete team setup (namespace, quota, NetworkPolicy, RBAC, pipeline, AppProject, mesh)
 - DORA: PromQL for all 4 metrics + Grafana dashboard JSON + PrometheusRule alerts

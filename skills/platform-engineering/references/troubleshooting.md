@@ -132,13 +132,13 @@ oc get virtualservice <name> -n <namespace> \
 oc get pod -l app=<app> -n <namespace> -o jsonpath='{.items[0].spec.containers[*].name}'
 # Should include "istio-proxy"
 
-# Check if namespace is in the ServiceMeshMemberRoll
-oc get smmr default -n istio-system -o jsonpath='{.status.configuredMembers[*]}'
+# Check if namespace has the istio-injection label
+oc get namespace <namespace> -o jsonpath='{.metadata.labels.istio-injection}'
 ```
 
 **If traffic not routing:**
 - VirtualService weight still at 0 for the new version (Rollout hasn't progressed)
-- Namespace not in SMMR — sidecar not injected
+- Namespace missing `istio-injection=enabled` label — sidecar not injected
 - DestinationRule subsets don't match pod labels
 
 ### Step 8: Is the Rollout progressing?
@@ -218,7 +218,7 @@ oc get promotionstrategy <name> -n <namespace> \
 
 | Symptom | Likely Cause | Debug Command |
 |---------|-------------|---------------|
-| 503 errors | Sidecar not injected or SMMR not updated | `oc get pod <pod> -n <ns> -o jsonpath='{.spec.containers[*].name}'` |
+| 503 errors | Sidecar not injected or namespace missing `istio-injection=enabled` label | `oc get pod <pod> -n <ns> -o jsonpath='{.spec.containers[*].name}'` |
 | Connection refused | PeerAuthentication strict but client has no sidecar | `oc get peerauthentication -n <ns>` |
 | mTLS handshake failure | Certificate expired or root CA mismatch | `istioctl proxy-config secret <pod> -n <ns>` |
 | Traffic not shifting | VirtualService not applied or subset labels wrong | `oc get vs -n <ns> -o yaml; oc get dr -n <ns> -o yaml` |
@@ -312,16 +312,14 @@ references: `image: quay.io/org/app@sha256:abc123...`.
 
 ### 4. Mesh configured but 503 errors
 
-**Cause:** Namespace not added to ServiceMeshMemberRoll, so sidecar proxy is not
+**Cause:** Namespace missing `istio-injection=enabled` label, so sidecar proxy is not
 injected. Or PeerAuthentication is set to `STRICT` mTLS but the calling service
 has no sidecar.
 
 ```bash
-# Check SMMR membership
-oc get smmr default -n istio-system -o jsonpath='{.status.configuredMembers[*]}' | tr ' ' '\n' | grep <namespace>
-
-# Check sidecar injection label
+# Check namespace injection label
 oc get namespace <namespace> -o jsonpath='{.metadata.labels.istio-injection}'
+# Should return "enabled"
 
 # Check sidecar presence
 oc get pods -n <namespace> -o jsonpath='{range .items[*]}{.metadata.name}: {.spec.containers[*].name}{"\n"}{end}' | grep -v istio-proxy
@@ -330,7 +328,7 @@ oc get pods -n <namespace> -o jsonpath='{range .items[*]}{.metadata.name}: {.spe
 oc get peerauthentication -n <namespace> -o jsonpath='{.items[*].spec.mtls.mode}'
 ```
 
-**Fix:** Add the namespace to SMMR or label with `istio-injection: enabled`.
+**Fix:** Label the namespace with `oc label namespace <ns> istio-injection=enabled`.
 If using strict mTLS, ensure all communicating services have sidecars injected.
 
 ### 5. Rollout healthy but promoter doesn't advance
@@ -418,7 +416,7 @@ the gitops-update step. Never hardcode registry URLs in multiple places.
 | Inspect proxy config | `istioctl proxy-config routes <pod> -n <ns>` | `oc exec <pod> -c istio-proxy -n <ns> -- pilot-agent request GET config_dump` |
 | Analyze mesh config | `istioctl analyze -n <ns>` | (no direct fallback — review VirtualService and DestinationRule manually) |
 | Check mTLS status | `istioctl authn tls-check <pod> -n <ns>` | `oc get peerauthentication -n <ns> -o yaml` |
-| View Envoy access logs | (configure in SMCP) | `oc logs <pod> -c istio-proxy -n <ns> --tail=100` |
+| View Envoy access logs | (configure in Istio CR meshConfig) | `oc logs <pod> -c istio-proxy -n <ns> --tail=100` |
 
 ### Argo Rollouts
 

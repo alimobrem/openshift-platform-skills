@@ -170,6 +170,44 @@
         "All ExternalSecrets reference the ClusterSecretStore via secretStoreRef",
         "ExternalSecrets use remoteRef with key paths pointing to Vault KV v2 paths"
       ]
+    },
+    {
+      "id": 11,
+      "name": "Rollout + Istio canary traffic management",
+      "prompt": "Set up a canary rollout for 'payments-api' in the 'payments' namespace using Argo Rollouts with Istio for traffic management. The image is quay.io/acme/payments-api:v3.0.0 with 5 replicas. Canary steps: 10% traffic, pause 2 minutes, 30% with Prometheus analysis checking error rate < 1%, 60%, pause 5 minutes, then 100%. Create the Rollout, stable and canary Services, VirtualService, DestinationRule with stable and canary subsets, and an AnalysisTemplate that queries Prometheus at http://prometheus.istio-system:9090 for the istio_requests_total error rate. Show how the Rollouts controller automatically updates VirtualService weights during progression.",
+      "expectations": [
+        "Output includes kind: Rollout with strategy.canary containing trafficRouting.istio",
+        "Rollout trafficRouting references the VirtualService by name and the stable/canary Services",
+        "Canary steps include setWeight 10, pause 2m, setWeight 30 with analysis, setWeight 60, pause 5m",
+        "Analysis step references an AnalysisTemplate by name",
+        "Output includes two Services: one for stable traffic and one for canary traffic",
+        "Both Services select the same app label but Rollouts manages the pod-template-hash selector",
+        "Output includes a VirtualService with route entries for stable and canary destinations with initial weights",
+        "Output includes a DestinationRule with two subsets (stable and canary) using pod-template-hash labels or matching labels",
+        "Output includes an AnalysisTemplate with Prometheus provider querying istio_requests_total for error rate",
+        "AnalysisTemplate has successCondition checking error rate < 0.01 or success rate >= 0.99",
+        "Explains that the Rollouts controller automatically updates VirtualService weights as canary progresses through steps",
+        "VirtualService and DestinationRule use networking.istio.io/v1 apiVersion"
+      ]
+    },
+    {
+      "id": 12,
+      "name": "Blue-green rollout with Istio traffic switching",
+      "prompt": "Set up a blue-green deployment for 'checkout-svc' in the 'checkout' namespace using Argo Rollouts with Istio. Active service 'checkout-active', preview service 'checkout-preview'. Do NOT auto-promote — require manual approval. Add a prePromotionAnalysis that checks the preview's error rate via Istio metrics (istio_requests_total) before allowing promotion. Configure the VirtualService to route all production traffic to active and a header-based rule (x-preview: true) to route to preview for testing. Generate Rollout, both Services, VirtualService, DestinationRule, and AnalysisTemplate.",
+      "expectations": [
+        "Output includes kind: Rollout with strategy.blueGreen",
+        "Blue-green config has activeService and previewService references",
+        "autoPromotionEnabled is false for manual approval",
+        "prePromotionAnalysis references an AnalysisTemplate",
+        "Output includes two Services: checkout-active and checkout-preview",
+        "Output includes a VirtualService with default route to active service",
+        "VirtualService has a header-based match rule for x-preview: true routing to preview",
+        "Output includes a DestinationRule with subsets or host references for active and preview",
+        "AnalysisTemplate queries Prometheus using istio_requests_total for the preview service error rate",
+        "AnalysisTemplate successCondition checks error rate threshold",
+        "VirtualService and DestinationRule use networking.istio.io/v1",
+        "Explains the promotion flow: preview deployed → prePromotionAnalysis runs → manual promote → active switches"
+      ]
     }
   ]
 }
