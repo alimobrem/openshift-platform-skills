@@ -316,8 +316,10 @@ Evals on `claude-opus-4-6`. Tests **outcomes** (correct YAML, right CRDs, safety
 <tr><td>Platform health check</td><td><b>10/10</b></td><td>All 7 controllers checked, CRDs verified, summary produced</td></tr>
 <tr><td>Quay registry setup</td><td><b>10/10</b></td><td>QuayRegistry CR + Clair + robot accounts + scanning policies + Tekton integration</td></tr>
 <tr><td>ESO + Vault</td><td><b>10/10</b></td><td>ClusterSecretStore + Vault K8s auth + 3 ExternalSecrets + 1h refresh</td></tr>
-<tr><td><b>Overall (Opus)</b></td><td><b>100/100</b></td><td>Perfect score — correct YAML, right CRDs, complete coverage</td></tr>
-<tr><td><b>Overall (Sonnet)</b></td><td><b>99/100</b></td><td>Near-perfect — only miss: namespace enrollment count in OSSM eval</td></tr>
+<tr><td>Canary Rollout + Istio</td><td><b>12/12</b></td><td>Rollout + VirtualService weight splitting + DestinationRule subsets + Prometheus AnalysisTemplate</td></tr>
+<tr><td>Blue-green + Istio preview</td><td><b>12/12</b></td><td>Blue-green with header-based preview routing + prePromotionAnalysis + manual promote</td></tr>
+<tr><td><b>Overall (Opus)</b></td><td><b>124/124</b></td><td>Perfect score — correct YAML, right CRDs, complete coverage</td></tr>
+<tr><td><b>Overall (Sonnet)</b></td><td><b>99/100</b></td><td>Near-perfect on core 10 evals — only miss: namespace enrollment count</td></tr>
 </tbody>
 </table>
 

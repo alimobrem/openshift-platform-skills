@@ -37,19 +37,19 @@
     },
     {
       "id": 3,
-      "name": "OSSM setup",
-      "prompt": "Set up OpenShift Service Mesh for a production environment. Create a ServiceMeshControlPlane in the istio-system namespace with strict mTLS enforced everywhere. Add namespaces 'payments', 'orders', and 'notifications' to the mesh via ServiceMeshMemberRoll. Create a PeerAuthentication resource enforcing STRICT mTLS mesh-wide. Enable Kiali, Jaeger (with Elasticsearch storage), and Prometheus addons.",
+      "name": "OSSM 3.0 setup",
+      "prompt": "Set up OpenShift Service Mesh 3.0 for a production environment. Install the Red Hat operator (servicemeshoperator3 from redhat-operators), create an IstioCNI and Istio CR in istio-system with the openshift profile, enforce strict mTLS everywhere via PeerAuthentication, and enroll namespaces 'payments', 'orders', and 'notifications' into the mesh. Also install the Kiali operator for the dashboard.",
       "expectations": [
-        "Output contains kind: ServiceMeshControlPlane with apiVersion: maistra.io/v2",
-        "SMCP is in namespace istio-system",
-        "SMCP has security.dataPlane.mtls: true",
-        "Output contains kind: ServiceMeshMemberRoll with members list including payments, orders, and notifications",
-        "ServiceMeshMemberRoll is in namespace istio-system",
-        "Output contains kind: PeerAuthentication with apiVersion: security.istio.io/v1beta1",
-        "PeerAuthentication has spec.mtls.mode: STRICT (not PERMISSIVE or DISABLE)",
-        "SMCP addons enable Kiali",
-        "SMCP addons configure Jaeger with Elasticsearch storage type",
-        "SMCP addons enable Prometheus"
+        "Operator Subscription uses name: servicemeshoperator3 with source: redhat-operators",
+        "Output contains kind: IstioCNI with apiVersion: sailoperator.io/v1 and profile: openshift",
+        "Output contains kind: Istio with apiVersion: sailoperator.io/v1",
+        "Istio CR has profile: openshift and namespace: istio-system",
+        "IstioCNI is created before the Istio CR (correct install order)",
+        "Output contains kind: PeerAuthentication with spec.mtls.mode: STRICT",
+        "Namespaces payments, orders, and notifications have label istio-injection: enabled",
+        "Does NOT use ServiceMeshControlPlane or ServiceMeshMemberRoll (those are OSSM 2.x)",
+        "Kiali operator Subscription uses source: redhat-operators",
+        "Output includes verification commands (oc get pods, oc wait)"
       ]
     },
     {
@@ -140,8 +140,9 @@
     {
       "id": 9,
       "name": "Quay registry setup",
-      "prompt": "Set up a Quay registry on OpenShift for our organization. Create the QuayRegistry CR with all managed components including Clair for vulnerability scanning. Set up a robot account for the CI pipeline to push images. Create the dockerconfigjson Secret for pipeline authentication. Configure image scanning policies to block images with critical vulnerabilities. Show how to integrate with Tekton pipelines for image push.",
+      "prompt": "Set up a Quay registry on OpenShift for our organization. Install the Quay operator from the Red Hat catalog. Create the QuayRegistry CR with all managed components including Clair for vulnerability scanning. Set up a robot account for the CI pipeline to push images. Create the dockerconfigjson Secret for pipeline authentication. Configure image scanning policies to block images with critical vulnerabilities. Show how to integrate with Tekton pipelines for image push.",
       "expectations": [
+        "Quay operator Subscription uses source: redhat-operators (not community)",
         "Output includes kind: QuayRegistry with apiVersion: quay.redhat.com/v1",
         "QuayRegistry has Clair component with managed: true",
         "Output includes configuration or instructions for creating a robot account",
@@ -149,7 +150,6 @@
         "Output includes scanning policy configuration or Clair vulnerability threshold settings",
         "Output shows how Tekton pipeline references the registry push Secret",
         "QuayRegistry has essential components enabled (postgres, redis, objectstorage, route)",
-        "Output includes monitoring component enabled for registry observability",
         "Registry auth Secret is in the correct namespace for the pipeline ServiceAccount",
         "Output addresses blocking or alerting on critical vulnerabilities from scans"
       ]
@@ -157,9 +157,10 @@
     {
       "id": 10,
       "name": "External Secrets with Vault",
-      "prompt": "Set up External Secrets Operator with a HashiCorp Vault backend. Create a ClusterSecretStore that authenticates to Vault at https://vault.internal:8200 using Kubernetes auth. Then create ExternalSecrets for: registry-auth (dockerconfigjson for Quay), git-credentials (SSH key for GitOps repo), and tls-cert (TLS certificate for the mesh gateway). All secrets should have a 1-hour refresh interval. Use the v2 KV secrets engine at path 'secret'.",
+      "prompt": "Set up External Secrets Operator on OpenShift with a HashiCorp Vault backend. Install the Red Hat ESO operator from redhat-operators. Create a ClusterSecretStore that authenticates to Vault at https://vault.internal:8200 using Kubernetes auth. Then create ExternalSecrets for: registry-auth (dockerconfigjson for Quay), git-credentials (SSH key for GitOps repo), and tls-cert (TLS certificate for the mesh gateway). All secrets should have a 1-hour refresh interval. Use the v2 KV secrets engine at path 'secret'.",
       "expectations": [
-        "Output includes kind: ClusterSecretStore with apiVersion: external-secrets.io/v1beta1",
+        "ESO operator Subscription uses source: redhat-operators (not community-operators)",
+        "Output includes kind: ClusterSecretStore with apiVersion: external-secrets.io/v1",
         "ClusterSecretStore has provider.vault with server: https://vault.internal:8200",
         "Vault auth uses Kubernetes auth method with mountPath and role",
         "Vault config specifies version: v2 and path: secret for KV engine",
