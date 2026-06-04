@@ -15,8 +15,10 @@ platform — only individual tools in isolation.
 ## Solution
 
 A single `platform-engineering` skill that understands the full delivery lifecycle and
-how each layer connects to the next. It covers 29 use cases across 6 layers: Build,
-Pipeline, GitOps (delegates to argo-skills), Mesh, Delivery/Promotion, and Audit/Debug.
+how each layer connects to the next. It covers 37 use cases across 8 layers: Build,
+Pipeline, Registry, Secrets, GitOps (delegates to argo-skills), Mesh, Delivery/Promotion,
+and Audit/Debug. Optional components (registry, secrets, build, mesh) are swappable —
+defaults to Quay + External Secrets Operator but adapts when the user specifies alternatives.
 
 ## Delivery Lifecycle
 
@@ -50,13 +52,15 @@ openshift-platform-skills/
 │   └── platform-engineering/
 │       ├── SKILL.md
 │       ├── references/
-│       │   ├── shipwright.md           # ~400 lines
-│       │   ├── tekton.md              # ~500 lines
-│       │   ├── istio.md               # ~500 lines
-│       │   ├── delivery-flows.md      # ~400 lines
-│       │   ├── platform-onboarding.md # ~300 lines
-│       │   ├── dora-metrics.md        # ~250 lines
-│       │   └── troubleshooting.md     # ~350 lines
+│       │   ├── shipwright.md           # ~400 lines — Build layer
+│       │   ├── tekton.md              # ~500 lines — Pipeline layer
+│       │   ├── istio.md               # ~500 lines — Mesh layer
+│       │   ├── quay.md               # ~300 lines — Registry (default, swappable)
+│       │   ├── external-secrets.md    # ~300 lines — Secrets (default, swappable)
+│       │   ├── delivery-flows.md      # ~400 lines — End-to-end integration
+│       │   ├── platform-onboarding.md # ~300 lines — Team/app onboarding
+│       │   ├── dora-metrics.md        # ~250 lines — Metrics & dashboards
+│       │   └── troubleshooting.md     # ~350 lines — Cross-layer debug
 │       └── evals/evals.json
 ├── agents/
 │   ├── claude-code/platform.md
@@ -89,12 +93,29 @@ openshift-platform-skills/
 |----------------|-----------|-------|
 | Builds, images, Buildah, BuildConfig, Shipwright | `shipwright.md` | Build |
 | Pipelines, Tasks, Triggers, CI, OpenShift Pipelines | `tekton.md` | Pipeline |
+| Registry, Quay, Harbor, image push, robot accounts | `quay.md` | Registry |
+| Secrets, Vault, ESO, ExternalSecret, credentials | `external-secrets.md` | Secrets |
 | Mesh, mTLS, traffic, VirtualService, Kiali, OSSM | `istio.md` | Mesh |
 | Full flow, end-to-end, "set up everything" | `delivery-flows.md` | Integration |
 | New team, onboarding, namespace setup | `platform-onboarding.md` | Onboarding |
 | DORA, metrics, dashboards, deployment frequency | `dora-metrics.md` | Metrics |
 | Debug, trace, "why isn't my change in prod" | `troubleshooting.md` | Debug |
 | Argo CD, Applications, Rollouts, Workflows | Redirect to `argo-skills` | GitOps |
+
+### Optional Components (Swappable)
+
+The skill has a **default stack** but supports swapping components. When the user
+specifies an alternative, the skill adapts YAML and integration patterns accordingly.
+
+| Layer | Default | Alternatives | How to swap |
+|-------|---------|-------------|-------------|
+| Registry | **Quay** | Harbor, OpenShift internal registry, ECR, GCR, GHCR, Docker Hub | User says "we use Harbor" → skill generates Harbor-specific push secrets, robot accounts, and registry URLs |
+| Secrets | **External Secrets Operator** | Vault (direct), Sealed Secrets, SOPS, AWS Secrets Manager | User says "we use Vault" → skill generates Vault SecretStore + ExternalSecret instead of ESO ClusterSecretStore |
+| Build | **Shipwright** | Tekton Buildah task, BuildConfig (legacy), Kaniko | User says "build in the pipeline" → skill inlines buildah task instead of Shipwright BuildRun |
+| Mesh | **Istio / OSSM** | No mesh (replica-based canary only) | User says "no mesh" → skill generates Rollout without trafficRouting |
+
+The skill asks which components the user has if the prompt is ambiguous. It does not
+assume the defaults without checking.
 
 ### Safety Model
 
@@ -143,6 +164,38 @@ Gateway, PeerAuthentication, AuthorizationPolicy, RequestAuthentication
 - Rollout integration: Argo Rollouts + Istio VirtualService for canary
 - Circuit breaking, retries, timeouts on DestinationRule
 - Multi-cluster mesh
+
+### quay.md (~300 lines)
+
+**Default registry. Swappable with Harbor, internal registry, ECR, GCR, GHCR.**
+
+**Content:**
+- Quay operator install on OpenShift (QuayRegistry CR)
+- Organizations, repositories, robot accounts
+- Registry auth secrets for Kubernetes (dockerconfigjson)
+- Image scanning (Clair integration, vulnerability reports)
+- Mirroring rules for upstream images
+- Geo-replication for multi-cluster
+- Integration: Shipwright/Tekton push to Quay, Argo CD Image Updater polls from Quay
+- **Swap guide:** table showing equivalent config for Harbor, internal registry, ECR, GCR
+  (Secret format, push URL, auth method, scanning equivalent)
+
+### external-secrets.md (~300 lines)
+
+**Default secrets management. Swappable with Vault, Sealed Secrets, SOPS.**
+
+**CRDs:** SecretStore, ClusterSecretStore, ExternalSecret, ClusterExternalSecret
+
+**Content:**
+- ESO operator install
+- SecretStore backends: AWS Secrets Manager, HashiCorp Vault, Azure Key Vault, GCP Secret Manager
+- ExternalSecret patterns: single key, templated, data-from
+- Integration: pipeline ServiceAccount secrets, Argo CD repo credentials, mesh TLS certs,
+  registry auth, GitOps promoter GitHub App keys
+- Rotation: automatic refresh via refreshInterval
+- RBAC: which ServiceAccounts can read which SecretStores
+- **Swap guide:** equivalent patterns for Vault Agent Injector, Sealed Secrets (kubeseal),
+  and SOPS (Argo CD Kustomize decryption)
 
 ### delivery-flows.md (~400 lines)
 
@@ -196,6 +249,18 @@ Gateway, PeerAuthentication, AuthorizationPolicy, RequestAuthentication
 10. Debug pipeline failures
 11. Pipeline RBAC (ServiceAccount, registry push, Git write)
 
+### Registry Layer (4)
+30. Set up Quay on OpenShift with robot accounts for pipeline push
+31. Configure image scanning and vulnerability policies
+32. Set up registry mirroring for air-gapped clusters
+33. Swap registry — generate equivalent config for Harbor/ECR/internal
+
+### Secrets Layer (4)
+34. Set up External Secrets Operator with Vault backend
+35. Create ExternalSecrets for pipeline credentials, registry auth, Git tokens
+36. Configure secret rotation with refreshInterval
+37. Swap secrets manager — generate equivalent for Sealed Secrets or SOPS
+
 ### GitOps Layer (3, delegates to argo-skills)
 12. Pipeline → GitOps integration
 13. Image updater as alternative
@@ -222,7 +287,7 @@ Gateway, PeerAuthentication, AuthorizationPolicy, RequestAuthentication
 28. Security audit (pipelines, mesh, GitOps)
 29. Trace delivery failure across layers
 
-## Evals (8 scenarios)
+## Evals (10 scenarios)
 
 1. **Shipwright build setup** — generate Build + BuildStrategy for Go app with Buildah
 2. **Tekton CI pipeline** — full pipeline with clone, test, build, scan, gitops-update tasks
@@ -232,6 +297,8 @@ Gateway, PeerAuthentication, AuthorizationPolicy, RequestAuthentication
 6. **DORA metrics** — PromQL queries + Grafana dashboard for 4 metrics
 7. **Cross-layer debug** — "my change isn't in production" trace
 8. **Platform health check** — check all components across all layers
+9. **Quay registry setup** — configure Quay with robot accounts, scanning, pipeline push secrets
+10. **External Secrets with Vault** — set up ESO + Vault backend + ExternalSecrets for pipeline and app credentials
 
 ## Relationship to argo-skills
 
