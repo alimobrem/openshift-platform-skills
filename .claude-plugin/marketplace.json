@@ -15,7 +15,10 @@
       "source": "./",
       "strict": false,
       "skills": [
-        "./skills/platform-engineering"
+        "./skills/platform-ci",
+        "./skills/platform-mesh",
+        "./skills/platform-infra",
+        "./skills/platform-integration"
       ],
       "agents": [
         "./agents/claude-code/platform.md"

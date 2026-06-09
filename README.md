@@ -25,7 +25,7 @@
 ```shell
 # Claude Code
 /plugin marketplace add alimobrem/openshift-platform-skills
-/plugin install openshift-platform-skills@platform-engineering
+/plugin install openshift-platform-skills@platform
 
 # Then try:
 # "Audit this repo for platform engineering best practices"
@@ -42,11 +42,12 @@
 
 ```shell
 /plugin marketplace add alimobrem/openshift-platform-skills
-/plugin install openshift-platform-skills@platform-engineering
+/plugin install openshift-platform-skills@platform
 ```
 
-After install, the `platform-engineering` agent appears in `/agents` and skills auto-trigger
-based on context. Run `/reload-plugins` if they don't appear immediately.
+After install, the `platform` agent appears in `/agents` and the 4 skills
+(`platform-ci`, `platform-mesh`, `platform-infra`, `platform-integration`)
+auto-trigger based on context. Run `/reload-plugins` if they don't appear immediately.
 
 </details>
 
@@ -130,15 +131,15 @@ brew bundle
 The agent automatically selects the right layer based on what you ask:
 
 ```
- Build an image ─────────► Build        Shipwright / Buildah / S2I
- Run a pipeline ─────────► Pipeline     Tekton Pipelines & Triggers
- Manage images ──────────► Registry     Quay / ImageStreams / signing
- Rotate secrets ─────────► Secrets      ExternalSecretOperator / vault
- Configure mesh ─────────► Mesh         Istio / OpenShift Service Mesh
- Ship a release ─────────► Delivery     Progressive rollouts / GitOps promotion
- Onboard a team ─────────► Onboarding   Namespace provisioning / quotas / RBAC
- Measure velocity ───────► Metrics      DORA four keys / lead time / MTTR
- Debug failures ─────────► Debug        Cross-layer troubleshooting
+ Build an image ─────────► platform-ci          Shipwright / Buildah
+ Run a pipeline ─────────► platform-ci          Tekton Pipelines & Triggers
+ Configure mesh ─────────► platform-mesh        Istio / OpenShift Service Mesh
+ Manage images ──────────► platform-infra       Quay / scanning / signing
+ Rotate secrets ─────────► platform-infra       ExternalSecretOperator / Vault
+ Ship a release ─────────► platform-integration Progressive delivery flows
+ Onboard a team ─────────► platform-integration Namespace / quotas / RBAC
+ Measure velocity ───────► platform-integration DORA four keys
+ Debug failures ─────────► platform-integration Cross-layer troubleshooting
 ```
 
 You don't need to invoke layers manually — just describe what you need.
@@ -313,36 +314,47 @@ Destructive operations (delete, scale-to-zero, rollback) require typing the reso
 
 ## Benchmarks
 
-Evals on `claude-opus-4-6`. Tests **outcomes** (correct YAML, right CRDs, safety model), not process.
-[Full results](benchmarks/platform-engineering.md)
+Evals test **outcomes** (correct YAML, right CRDs, safety model), not process.
+12 evals across 4 skills, tested on Opus and Sonnet.
 
 <table>
 <thead>
 <tr>
-<th width="220">Eval</th>
-<th width="80">Score</th>
+<th width="200">Skill</th>
+<th width="80">Evals</th>
+<th width="120">Pre-split Score</th>
 <th>Highlights</th>
 </tr>
 </thead>
 <tbody>
-<tr><td>Shipwright build setup</td><td><b>10/10</b></td><td>Build + ClusterBuildStrategy with Buildah, Git SHA tags, registry auth, timeout, retention</td></tr>
-<tr><td>Tekton CI pipeline</td><td><b>10/10</b></td><td>5-task pipeline with runAfter chain, workspaces, Trivy HIGH/CRITICAL, gitops-update</td></tr>
-<tr><td>OSSM setup</td><td><b>10/10</b></td><td>Istio control plane + strict mTLS + namespace enrollment + Kiali/tracing/Prometheus</td></tr>
-<tr><td>End-to-end delivery flow</td><td><b>10/10</b></td><td>All 8 layers wired: Shipwright → Tekton → Quay → ESO → ArgoCD → Istio → Rollout → Promoter</td></tr>
-<tr><td>Platform onboarding</td><td><b>10/10</b></td><td>Complete team setup: namespace, quota, NetworkPolicy, RBAC, pipeline, AppProject, mesh</td></tr>
-<tr><td>DORA metrics</td><td><b>10/10</b></td><td>PromQL for all 4 metrics + Grafana dashboard JSON + PrometheusRule alerts</td></tr>
-<tr><td>Cross-layer debug</td><td><b>10/10</b></td><td>9-step trace from commit through all platform layers with CLI commands</td></tr>
-<tr><td>Platform health check</td><td><b>10/10</b></td><td>All 7 controllers checked, CRDs verified, summary produced</td></tr>
-<tr><td>Quay registry setup</td><td><b>10/10</b></td><td>QuayRegistry CR + Clair + robot accounts + scanning policies + Tekton integration</td></tr>
-<tr><td>ESO + Vault</td><td><b>10/10</b></td><td>ClusterSecretStore + Vault K8s auth + 3 ExternalSecrets + 1h refresh</td></tr>
-<tr><td>Canary Rollout + Istio</td><td><b>12/12</b></td><td>Rollout + VirtualService weight splitting + DestinationRule subsets + Prometheus AnalysisTemplate</td></tr>
-<tr><td>Blue-green + Istio preview</td><td><b>12/12</b></td><td>Blue-green with header-based preview routing + prePromotionAnalysis + manual promote</td></tr>
-<tr><td><b>Overall (Opus)</b></td><td><b>124/124</b></td><td>Perfect score — correct YAML, right CRDs, complete coverage</td></tr>
-<tr><td><b>Overall (Sonnet)</b></td><td><b>99/100</b></td><td>Near-perfect on core 10 evals — only miss: namespace enrollment count</td></tr>
+<tr>
+<td><a href="benchmarks/platform-ci.md"><b>platform-ci</b></a></td>
+<td>3</td>
+<td><b>20/20 (100%)</b></td>
+<td>Shipwright builds, Tekton pipelines, Triggers with EventListener (new)</td>
+</tr>
+<tr>
+<td><a href="benchmarks/platform-mesh.md"><b>platform-mesh</b></a></td>
+<td>3</td>
+<td><b>34/34 (100%)</b></td>
+<td>OSSM 3.0 setup, canary+Istio, blue-green+Istio</td>
+</tr>
+<tr>
+<td><a href="benchmarks/platform-infra.md"><b>platform-infra</b></a></td>
+<td>2</td>
+<td><b>20/20 (100%)</b></td>
+<td>Quay registry + Clair, ESO + Vault</td>
+</tr>
+<tr>
+<td><a href="benchmarks/platform-integration.md"><b>platform-integration</b></a></td>
+<td>4</td>
+<td><b>40/40 (100%)</b></td>
+<td>E2E delivery, onboarding, DORA metrics, cross-layer debug</td>
+</tr>
 </tbody>
 </table>
 
-<sub>Run locally with <code>make test-evals</code> or via GitHub Actions (<code>evals</code> workflow).</sub>
+<sub>Run <code>make test-all</code> to run all 12 evals. Per-skill: <code>make test-ci</code>, <code>make test-mesh</code>, etc.</sub>
 
 ## Contributing
 
@@ -355,11 +367,14 @@ Contributions are welcome! Please see [CONTRIBUTING.md](CONTRIBUTING.md) for gui
 # Install prerequisites (macOS)
 brew bundle
 
-# Run tests
-make test
+# Run all evals
+make test-all
 
-# Run evals
-make eval
+# Run per-skill evals
+make test-ci test-mesh test-infra test-integration
+
+# Run script tests
+make test-scripts
 ```
 
 See [AGENTS.md](AGENTS.md) for the repo layout, skill conventions, and eval runner instructions.
