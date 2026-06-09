@@ -1,0 +1,73 @@
+{
+  "skill_name": "platform-integration",
+  "evals": [
+    {
+      "id": 1,
+      "name": "End-to-end delivery flow",
+      "prompt": "Wire together a complete delivery flow for a microservice called 'checkout-svc'. The flow should cover: Shipwright builds from Git, Tekton pipeline runs tests and scans, pushes image to Quay, updates GitOps repo, Argo CD syncs to dev cluster, Istio manages traffic with VirtualService, and gitops-promoter gates promotion through dev -> staging -> production. Use External Secrets Operator for all credentials. Show all CRDs needed and how they connect.",
+      "expectations": [
+        "Output includes a Shipwright Build with BuildStrategy for container image building",
+        "Output includes a Tekton Pipeline with tasks covering test, build, scan, and gitops-update",
+        "Output includes an ExternalSecret or ClusterSecretStore for credential management",
+        "Output includes an Argo CD Application or references Argo CD for GitOps sync",
+        "Output includes an Istio VirtualService or traffic management resource",
+        "Output includes a PromotionStrategy with 3 environments (dev, staging, production)",
+        "PromotionStrategy has commit status gating (activeCommitStatuses or proposedCommitStatuses)",
+        "Credentials are managed via ExternalSecret (not plain-text Secrets)",
+        "The flow shows clear data handoff: pipeline updates GitOps repo with new image tag",
+        "Production environment requires manual approval (autoMerge: false or equivalent)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Platform onboarding",
+      "prompt": "Onboard a new team called 'analytics' onto the platform. They need: a namespace with ResourceQuota and LimitRange, NetworkPolicies (default-deny plus allow from mesh), RBAC RoleBinding for 'analytics-developers' group, a Tekton pipeline for their Python application, an Argo CD AppProject restricting them to their namespace and repos, an Application for their service, and mesh membership via ServiceMeshMemberRoll update.",
+      "expectations": [
+        "Output includes a Namespace for the analytics team",
+        "Output includes a ResourceQuota with CPU, memory, and pod limits",
+        "Output includes a default-deny NetworkPolicy and at least one allow policy",
+        "Output includes a RoleBinding for the analytics-developers group",
+        "RoleBinding uses ClusterRole edit or a custom role (not cluster-admin)",
+        "Output includes a Tekton Pipeline with tasks appropriate for Python",
+        "Output includes an Argo CD AppProject with destination restricted to the analytics namespace",
+        "AppProject has sourceRepos restricted to the team's repositories",
+        "Output includes an Argo CD Application referencing the AppProject",
+        "Output includes ServiceMeshMemberRoll addition or a ServiceMeshMember for the namespace"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "DORA metrics",
+      "prompt": "Set up DORA metrics tracking for our platform. Generate PromQL queries for all 4 DORA metrics (deployment frequency, lead time for changes, change failure rate, mean time to recovery) using data from Argo CD sync events, Tekton PipelineRun completions, and Istio error rates. Also generate a Grafana dashboard JSON model with panels for each metric and a PrometheusRule with alerts for when metrics degrade below the 'high performer' thresholds.",
+      "expectations": [
+        "Output includes PromQL for deployment frequency using Argo CD sync or Tekton PipelineRun metrics",
+        "Output includes PromQL for lead time for changes measuring commit-to-deploy duration",
+        "Output includes PromQL for change failure rate using Istio error rates or rollback events",
+        "Output includes PromQL for MTTR using Argo CD sync recovery or incident resolution time",
+        "Output includes a Grafana dashboard JSON with panels for each DORA metric",
+        "Grafana dashboard has at least 4 panels corresponding to the 4 DORA metrics",
+        "Output includes a PrometheusRule with alert definitions",
+        "Alerts reference DORA threshold values (e.g., deployment frequency, lead time targets)",
+        "PromQL queries reference real metric names from Argo CD, Tekton, or Istio exporters",
+        "Dashboard includes time range selectors or variable templates for filtering"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "Cross-layer debug",
+      "prompt": "My commit abc123 to the payments service was merged 2 hours ago but the change isn't visible in production. Help me trace where it's stuck. Walk me through the debugging steps across all platform layers: check if the pipeline ran, if the image was built and pushed, if the GitOps repo was updated, if Argo CD synced, if the mesh is routing traffic correctly, and if the promoter approved promotion to production.",
+      "expectations": [
+        "Response includes steps to check Tekton PipelineRun status for the commit",
+        "Response includes steps to verify Shipwright BuildRun completed and image was pushed",
+        "Response includes steps to check the GitOps repo for the updated image tag",
+        "Response includes steps to check Argo CD Application sync status",
+        "Response includes steps to verify Istio VirtualService traffic routing",
+        "Response includes steps to check gitops-promoter PromotionStrategy and commit statuses",
+        "Debug steps follow the delivery flow order (pipeline -> build -> registry -> gitops -> sync -> mesh -> promotion)",
+        "Response includes specific CLI commands (tkn, oc/kubectl, argocd, istioctl or equivalent)",
+        "Response identifies common failure points at each layer boundary",
+        "Response covers checking if the change is stuck in a non-production environment awaiting promotion"
+      ]
+    }
+  ]
+}

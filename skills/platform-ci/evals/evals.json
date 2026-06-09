@@ -1,0 +1,56 @@
+{
+  "skill_name": "platform-ci",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Shipwright build setup",
+      "prompt": "Generate a Shipwright Build and ClusterBuildStrategy for a Go application called 'inventory-svc'. Use Buildah as the build strategy with multi-stage support. The source is at https://github.com/acme-corp/inventory-svc.git (branch main). Push the built image to quay.io/acme/inventory-svc with a tag based on the Git SHA. Include registry auth via a Secret reference. Set a 20-minute timeout and retention limits.",
+      "expectations": [
+        "Output contains kind: ClusterBuildStrategy with apiVersion: shipwright.io/v1beta1",
+        "ClusterBuildStrategy uses Buildah (image reference contains buildah)",
+        "Output contains kind: Build with apiVersion: shipwright.io/v1beta1",
+        "Build has spec.source.type: Git with url: https://github.com/acme-corp/inventory-svc.git",
+        "Build has spec.strategy referencing the ClusterBuildStrategy by name",
+        "Build output image is quay.io/acme/inventory-svc with a dynamic tag (not :latest)",
+        "Build output has pushSecret or credentials.name referencing a registry auth Secret",
+        "Build has spec.timeout set to 20m or equivalent duration",
+        "Build has spec.retention with succeededLimit and failedLimit values",
+        "ClusterBuildStrategy step includes resource limits for CPU and memory"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "Tekton CI pipeline",
+      "prompt": "Create a complete Tekton CI pipeline called 'webapp-ci' for a Node.js application. The pipeline should have 5 tasks in order: git-clone, test (npm test), build (using Shipwright BuildRun), scan (Trivy vulnerability scanner with HIGH,CRITICAL severity), and gitops-update (commit new image tag to a GitOps repo at https://github.com/acme-corp/gitops-config.git). Include proper workspaces for source code and credentials. Create the ServiceAccount with registry push and Git write secrets.",
+      "expectations": [
+        "Output contains kind: Pipeline with apiVersion: tekton.dev/v1",
+        "Pipeline has exactly 5 tasks: git-clone, test, build, scan, gitops-update",
+        "Tasks are ordered with proper runAfter dependencies forming a sequential chain",
+        "Pipeline defines workspaces for shared source and credentials",
+        "git-clone task uses a ClusterTask or Task reference for git-clone",
+        "scan task references Trivy scanner with severity parameter set to HIGH,CRITICAL",
+        "gitops-update task commits the new image tag to the GitOps repo",
+        "Output includes a ServiceAccount with secrets for registry and Git access",
+        "ServiceAccount has a RoleBinding scoped to the namespace (not cluster-admin)",
+        "Pipeline params include repo-url, revision, and image-tag"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "Tekton Triggers with EventListener",
+      "prompt": "Set up Tekton Triggers for a GitHub webhook on push events. Create an EventListener called 'github-push-listener' in namespace 'ci' that receives GitHub push webhooks, extracts the repo URL, branch, and commit SHA from the payload, and triggers the 'webapp-ci' Pipeline. Include: a TriggerBinding that maps GitHub webhook fields (body.repository.clone_url, body.ref, body.after) to parameters, a TriggerTemplate that creates a PipelineRun referencing the webapp-ci Pipeline with those parameters, the EventListener with a GitHub interceptor that validates the webhook secret and filters for push events only, a ServiceAccount for the EventListener with RBAC to create PipelineRuns, and a Secret for the GitHub webhook token.",
+      "expectations": [
+        "Output contains kind: EventListener with apiVersion: triggers.tekton.dev/v1beta1",
+        "EventListener has a trigger with a GitHub interceptor",
+        "GitHub interceptor has a secretRef for webhook token validation",
+        "GitHub interceptor filters for push events (eventTypes contains push)",
+        "Output contains kind: TriggerBinding with apiVersion: triggers.tekton.dev/v1beta1",
+        "TriggerBinding maps body.repository.clone_url, body.ref, and body.after to parameters",
+        "Output contains kind: TriggerTemplate with apiVersion: triggers.tekton.dev/v1beta1",
+        "TriggerTemplate creates a PipelineRun referencing the webapp-ci Pipeline",
+        "Output includes a ServiceAccount with a RoleBinding granting permissions to create PipelineRuns",
+        "Output includes a Secret for the GitHub webhook token"
+      ]
+    }
+  ]
+}

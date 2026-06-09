@@ -1,0 +1,40 @@
+{
+  "skill_name": "platform-infra",
+  "evals": [
+    {
+      "id": 1,
+      "name": "Quay registry setup",
+      "prompt": "Set up a Quay registry on OpenShift for our organization. Install the Quay operator from the Red Hat catalog. Create the QuayRegistry CR with all managed components including Clair for vulnerability scanning. Set up a robot account for the CI pipeline to push images. Create the dockerconfigjson Secret for pipeline authentication. Configure image scanning policies to block images with critical vulnerabilities. Show how to integrate with Tekton pipelines for image push.",
+      "expectations": [
+        "Quay operator Subscription uses source: redhat-operators (not community)",
+        "Output includes kind: QuayRegistry with apiVersion: quay.redhat.com/v1",
+        "QuayRegistry has Clair component with managed: true",
+        "Output includes configuration or instructions for creating a robot account",
+        "Output includes a dockerconfigjson Secret or ExternalSecret for pipeline registry auth",
+        "Output includes scanning policy configuration or Clair vulnerability threshold settings",
+        "Output shows how Tekton pipeline references the registry push Secret",
+        "QuayRegistry has essential components enabled (postgres, redis, objectstorage, route)",
+        "Registry auth Secret is in the correct namespace for the pipeline ServiceAccount",
+        "Output addresses blocking or alerting on critical vulnerabilities from scans"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "External Secrets with Vault",
+      "prompt": "Set up External Secrets Operator on OpenShift with a HashiCorp Vault backend. Install the Red Hat ESO operator from redhat-operators. Create a ClusterSecretStore that authenticates to Vault at https://vault.internal:8200 using Kubernetes auth. Then create ExternalSecrets for: registry-auth (dockerconfigjson for Quay), git-credentials (SSH key for GitOps repo), and tls-cert (TLS certificate for the mesh gateway). All secrets should have a 1-hour refresh interval. Use the v2 KV secrets engine at path 'secret'.",
+      "expectations": [
+        "ESO operator Subscription uses source: redhat-operators (not community-operators)",
+        "Output includes kind: ClusterSecretStore with apiVersion: external-secrets.io/v1",
+        "ClusterSecretStore has provider.vault with server: https://vault.internal:8200",
+        "Vault auth uses Kubernetes auth method with mountPath and role",
+        "Vault config specifies version: v2 and path: secret for KV engine",
+        "Output includes ExternalSecret for registry-auth with target type kubernetes.io/dockerconfigjson",
+        "Output includes ExternalSecret for git-credentials with SSH key data",
+        "Output includes ExternalSecret for tls-cert with TLS certificate and key",
+        "All ExternalSecrets have refreshInterval: 1h",
+        "All ExternalSecrets reference the ClusterSecretStore via secretStoreRef",
+        "ExternalSecrets use remoteRef with key paths pointing to Vault KV v2 paths"
+      ]
+    }
+  ]
+}
