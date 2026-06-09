@@ -1,26 +1,29 @@
 # platform-integration
 
-## v0.1.0 (2026-06-04) — pre-split baseline
-
-Results from the monolithic `platform-engineering` skill (evals now owned by this skill):
-
-| Eval | Opus 4.6 | Sonnet 4.6 |
-|------|----------|------------|
-| End-to-end delivery flow | 10/10 (100%) | 10/10 (100%) |
-| Platform onboarding | 10/10 (100%) | 10/10 (100%) |
-| DORA metrics | 10/10 (100%) | 10/10 (100%) |
-| Cross-layer debug | 10/10 (100%) | 10/10 (100%) |
-
-## v0.2.0 (2026-06-09) — post-split
+## v0.2.0 (2026-06-09)
 
 Model: `claude-opus-4-6`
 
 | Eval | Score |
 |------|-------|
-| End-to-end delivery flow | — |
-| Platform onboarding | — |
-| DORA metrics | — |
-| Cross-layer debug | — |
-| **Overall** | **—** |
+| End-to-end delivery flow | 10/10 (100%) |
+| Platform onboarding | 10/10 (100%) |
+| DORA metrics | 10/10 (100%) |
+| Cross-layer debug | 10/10 (100%) |
+| **Overall** | **40/40 (100%)** |
 
-_Run `make test-integration` to populate results._
+**Key behaviors observed:**
+- E2E: all 8 layers wired (Shipwright → Tekton → Quay → ESO → Argo CD → Istio → Rollout → Promoter)
+- Onboarding: complete team setup (namespace, quota, NetworkPolicy, RBAC, pipeline, AppProject, mesh)
+- DORA: PromQL for all 4 metrics + Grafana dashboard JSON + PrometheusRule alerts
+- Debug: 9-step cross-layer trace with CLI commands per layer
+
+### claude-sonnet-4-6
+
+| Eval | Score |
+|------|-------|
+| End-to-end delivery flow | 10/10 (100%) |
+| Platform onboarding | 10/10 (100%) |
+| DORA metrics | 10/10 (100%) |
+| Cross-layer debug | 10/10 (100%) |
+| **Overall** | **40/40 (100%)** |

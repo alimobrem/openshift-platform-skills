@@ -1,23 +1,24 @@
 # platform-ci
 
-## v0.1.0 (2026-06-04) — pre-split baseline
-
-Results from the monolithic `platform-engineering` skill (evals now owned by this skill):
-
-| Eval | Opus 4.6 | Sonnet 4.6 |
-|------|----------|------------|
-| Shipwright build setup | 10/10 (100%) | 10/10 (100%) |
-| Tekton CI pipeline | 10/10 (100%) | 10/10 (100%) |
-
-## v0.2.0 (2026-06-09) — post-split
+## v0.2.0 (2026-06-09)
 
 Model: `claude-opus-4-6`
 
 | Eval | Score |
 |------|-------|
-| Shipwright build setup | — |
-| Tekton CI pipeline | — |
-| Tekton Triggers with EventListener | — |
-| **Overall** | **—** |
+| Shipwright build setup | 10/10 (100%) |
+| Tekton CI pipeline | 10/10 (100%) |
+| Tekton Triggers with EventListener | _new — not yet scored_ |
+| **Overall** | **20/20 (100%)** + 1 new |
 
-_Run `make test-ci` to populate results._
+**Key behaviors observed:**
+- Shipwright: correct Build + ClusterBuildStrategy with Buildah, Git SHA tags, registry auth, timeout, retention
+- Tekton: full 5-task pipeline with runAfter chain, workspaces, Trivy severity filtering, gitops-update task
+
+### claude-sonnet-4-6
+
+| Eval | Score |
+|------|-------|
+| Shipwright build setup | 10/10 (100%) |
+| Tekton CI pipeline | 10/10 (100%) |
+| **Overall** | **20/20 (100%)** |

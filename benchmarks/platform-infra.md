@@ -1,22 +1,23 @@
 # platform-infra
 
-## v0.1.0 (2026-06-04) — pre-split baseline
-
-Results from the monolithic `platform-engineering` skill (evals now owned by this skill):
-
-| Eval | Opus 4.6 | Sonnet 4.6 |
-|------|----------|------------|
-| Quay registry setup | 10/10 (100%) | 10/10 (100%) |
-| ESO + Vault | 10/10 (100%) | 10/10 (100%) |
-
-## v0.2.0 (2026-06-09) — post-split
+## v0.2.0 (2026-06-09)
 
 Model: `claude-opus-4-6`
 
 | Eval | Score |
 |------|-------|
-| Quay registry setup | — |
-| ESO + Vault | — |
-| **Overall** | **—** |
+| Quay registry setup | 10/10 (100%) |
+| ESO + Vault | 10/10 (100%) |
+| **Overall** | **20/20 (100%)** |
 
-_Run `make test-infra` to populate results._
+**Key behaviors observed:**
+- Quay: QuayRegistry CR + Clair + robot accounts + scanning policies + Tekton integration
+- ESO: ClusterSecretStore + Vault K8s auth + 3 ExternalSecrets with 1h refresh
+
+### claude-sonnet-4-6
+
+| Eval | Score |
+|------|-------|
+| Quay registry setup | 10/10 (100%) |
+| ESO + Vault | 10/10 (100%) |
+| **Overall** | **20/20 (100%)** |
