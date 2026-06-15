@@ -331,7 +331,7 @@ Evals test **outcomes** (correct YAML, right CRDs, safety model), not process.
 <tr>
 <td><a href="benchmarks/platform-ci.md"><b>platform-ci</b></a></td>
 <td>3</td>
-<td><b>20/20 (100%)</b></td>
+<td><b>30/30 (100%)</b></td>
 <td><b>20/20 (100%)</b></td>
 <td>Shipwright builds, Tekton pipelines, Triggers with EventListener</td>
 </tr>
@@ -359,7 +359,7 @@ Evals test **outcomes** (correct YAML, right CRDs, safety model), not process.
 <tr>
 <td><b>Total</b></td>
 <td><b>12</b></td>
-<td><b>114/114 (100%)</b></td>
+<td><b>124/124 (100%)</b></td>
 <td><b>89/90 (99%)</b></td>
 <td></td>
 </tr>
