@@ -314,8 +314,8 @@ Destructive operations (delete, scale-to-zero, rollback) require typing the reso
 
 ## Benchmarks
 
-Evals test **outcomes** (correct YAML, right CRDs, safety model), not process.
-12 evals across 4 skills, tested on Opus and Sonnet.
+Evals test **outcomes** — YAML correctness, diagnostic reasoning, trade-off analysis,
+and security judgment. 19 evals across 4 skills, tested on Opus and Sonnet.
 
 <table>
 <thead>
@@ -330,35 +330,35 @@ Evals test **outcomes** (correct YAML, right CRDs, safety model), not process.
 <tbody>
 <tr>
 <td><a href="benchmarks/platform-ci.md"><b>platform-ci</b></a></td>
-<td>3</td>
+<td>5</td>
 <td><b>30/30 (100%)</b></td>
 <td><b>20/20 (100%)</b></td>
-<td>Shipwright builds, Tekton pipelines, Triggers with EventListener</td>
+<td>YAML gen, diagnose broken PipelineRun, Shipwright vs Buildah trade-off</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-mesh.md"><b>platform-mesh</b></a></td>
-<td>3</td>
+<td>5</td>
 <td><b>34/34 (100%)</b></td>
 <td><b>9/10 (90%)</b></td>
-<td>OSSM 3.0 setup, canary+Istio, blue-green+Istio</td>
+<td>YAML gen, canary vs blue-green trade-off, diagnose mTLS 503s</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-infra.md"><b>platform-infra</b></a></td>
-<td>2</td>
+<td>4</td>
 <td><b>20/20 (100%)</b></td>
 <td><b>20/20 (100%)</b></td>
-<td>Quay registry + Clair, ESO + Vault</td>
+<td>YAML gen, refuse hardcoded creds, diagnose ESO kind mismatch</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-integration.md"><b>platform-integration</b></a></td>
-<td>4</td>
+<td>5</td>
 <td><b>40/40 (100%)</b></td>
 <td><b>40/40 (100%)</b></td>
-<td>E2E delivery, onboarding, DORA metrics, cross-layer debug</td>
+<td>E2E flow, onboarding, DORA, diagnose Rollout vs Argo CD sync</td>
 </tr>
 <tr>
 <td><b>Total</b></td>
-<td><b>12</b></td>
+<td><b>19</b></td>
 <td><b>124/124 (100%)</b></td>
 <td><b>89/90 (99%)</b></td>
 <td></td>
