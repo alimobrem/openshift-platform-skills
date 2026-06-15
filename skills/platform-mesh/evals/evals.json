@@ -55,6 +55,35 @@
         "VirtualService and DestinationRule use networking.istio.io/v1",
         "Explains the promotion flow: preview deployed → prePromotionAnalysis runs → manual promote → active switches"
       ]
+    },
+    {
+      "id": 4,
+      "name": "Trade-off: canary vs blue-green for payments API",
+      "prompt": "We're deploying a payments API that processes credit card transactions. Downtime costs us $50k/hour. We need to validate new versions with real traffic but can't afford to expose more than 5% of users to a bad release. We also need the ability to test the new version with specific headers before any real user traffic hits it. Should we use canary or blue-green with Istio? Why? What are we giving up with your recommendation?",
+      "expectations": [
+        "Recommends blue-green (not canary) as primary strategy for this use case",
+        "Explains that blue-green with header-based preview allows testing before ANY real traffic exposure",
+        "Explains why canary is riskier here: even 5% weight means 5% of payment transactions hit unvalidated code",
+        "Mentions prePromotionAnalysis for automated validation of the preview before promotion",
+        "Acknowledges the trade-off: blue-green uses 2x resources (both versions run simultaneously)",
+        "Does NOT just describe both strategies — makes a clear recommendation with reasoning specific to the payments/financial context",
+        "Mentions that after blue-green promotion, the old version can be kept as instant rollback"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Diagnose 503s after enabling strict mTLS",
+      "prompt": "We just enabled strict mTLS across the cluster with a mesh-wide PeerAuthentication in istio-system. Now our legacy monitoring stack (Prometheus scraping /metrics endpoints from application pods) is getting 503 errors from all services in the mesh. The monitoring namespace 'openshift-monitoring' does NOT have sidecar injection enabled. The Prometheus pods don't have Istio sidecars. What's happening and how do we fix it without disabling mTLS for the whole cluster?",
+      "expectations": [
+        "Correctly identifies root cause: Prometheus without a sidecar cannot present a client TLS certificate, so mTLS-enforced services reject the connection with 503",
+        "Does NOT recommend disabling strict mTLS cluster-wide (that would defeat the purpose)",
+        "Offers multiple fix options with trade-offs",
+        "Option 1: Enable sidecar injection in the monitoring namespace (most secure but may conflict with openshift-monitoring)",
+        "Option 2: Create a per-port PeerAuthentication in PERMISSIVE mode for the metrics port only (targeted exception)",
+        "Option 3: Use Istio's built-in Prometheus metrics merge or envoy stats endpoint as an alternative scrape source",
+        "Recommends the least-privilege fix (per-port PERMISSIVE or metrics endpoint) over broad namespace exceptions",
+        "Provides the actual PeerAuthentication YAML for the recommended fix"
+      ]
     }
   ]
 }

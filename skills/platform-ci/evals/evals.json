@@ -51,6 +51,35 @@
         "Output includes a ServiceAccount with a RoleBinding granting permissions to create PipelineRuns",
         "Output includes a Secret for the GitHub webhook token"
       ]
+    },
+    {
+      "id": 4,
+      "name": "Diagnose broken PipelineRun",
+      "prompt": "My PipelineRun keeps failing. Here's what I have:\n\nThe Pipeline declares 3 workspaces: shared-workspace, docker-credentials, and git-credentials. But my PipelineRun only binds shared-workspace with a VolumeClaimTemplate. The error is: \"workspace 'docker-credentials' declared by pipeline not provided by pipelinerun\".\n\nAlso, inside the Pipeline, the build task creates a Shipwright BuildRun using apiVersion: shipwright.io/v1alpha1. And the gitops-update task has no runAfter field — it might run before the scan task finishes.\n\nWhat's wrong and how do I fix all the issues?",
+      "expectations": [
+        "Identifies the missing workspace bindings (docker-credentials and git-credentials not bound in PipelineRun)",
+        "Provides fix: add workspace entries in PipelineRun for docker-credentials and git-credentials with Secret or VolumeClaimTemplate",
+        "Identifies the deprecated apiVersion shipwright.io/v1alpha1 and recommends shipwright.io/v1beta1",
+        "Identifies the missing runAfter on gitops-update task causing potential out-of-order execution",
+        "Provides fix: add runAfter referencing the scan task to gitops-update",
+        "Prioritizes or categorizes the issues by severity (missing workspaces = runtime failure, deprecated API = future breakage, missing runAfter = race condition)",
+        "Does NOT just generate new YAML from scratch — actually diagnoses the specific problems described",
+        "Provides corrected YAML snippets for each fix"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "Trade-off: Shipwright vs Tekton Buildah task",
+      "prompt": "We currently use a Tekton Task with Buildah to build container images. Our team lead wants us to switch to Shipwright. We have 15 pipelines that each have a buildah task step. What would we gain from switching to Shipwright, what would break, and should we actually switch? Give me a real recommendation, not just a feature list.",
+      "expectations": [
+        "Lists concrete gains: Build CRD with retention policies, strategy reuse via ClusterBuildStrategy, source-to-image without full pipeline overhead, build-specific timeout and retry semantics",
+        "Lists what breaks or requires migration: 15 pipelines need refactoring, BuildRun replaces the buildah TaskRun step, different error handling and status checking",
+        "Gives a nuanced recommendation — not a blanket 'yes switch' or 'no stay'",
+        "Suggests a migration path (e.g., run both in parallel, migrate one pipeline first as a pilot)",
+        "Acknowledges that for teams already working well with Tekton Buildah, the migration cost may not be worth it",
+        "Mentions that Shipwright Build can be triggered from within a Tekton Pipeline (they're not mutually exclusive)",
+        "Does NOT just list features — actually weighs the tradeoffs for this specific scenario (15 existing pipelines)"
+      ]
     }
   ]
 }

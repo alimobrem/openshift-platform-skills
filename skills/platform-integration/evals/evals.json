@@ -68,6 +68,21 @@
         "Response identifies common failure points at each layer boundary",
         "Response covers checking if the change is stuck in a non-production environment awaiting promotion"
       ]
+    },
+    {
+      "id": 5,
+      "name": "Diagnose: Rollout paused despite Argo CD showing Synced",
+      "prompt": "My commit abc123 isn't in production. I already checked:\n- PipelineRun: completed successfully, image quay.io/acme/payments:abc123 pushed\n- GitOps repo: image tag updated to abc123 in dev/kustomization.yaml\n- Argo CD Application (dev): Synced, Healthy\n- Argo CD Application (staging): Synced, Healthy\n- Argo CD Application (prod): Synced, Healthy — but pods still show image tag 'old789'\n- VirtualService: weights are 100% stable, 0% canary\n- Rollout status: 'Paused' at step 0\n\nEverything looks green in Argo CD but the old image is still running. What's the root cause and what should I do?",
+      "expectations": [
+        "Identifies that the Rollout being 'Paused' at step 0 is the root cause — the new ReplicaSet was created but canary progression hasn't started",
+        "Explains the key insight: Argo CD shows 'Synced' because the Rollout spec in Git matches the cluster, but the Rollout controller manages pod progression independently of Argo CD sync status",
+        "Distinguishes between Argo CD sync status (spec matches Git) and Rollout progression status (which ReplicaSet is receiving traffic)",
+        "Suggests checking for a failed or pending AnalysisRun that might be blocking step 0",
+        "Suggests checking Rollout events: kubectl describe rollout or kubectl argo rollouts get rollout",
+        "Mentions that 'Paused' could mean: manual promotion required, AnalysisRun failed, or prePromotionAnalysis blocking",
+        "Provides specific diagnostic commands (kubectl argo rollouts status, kubectl get analysisrun)",
+        "Does NOT suggest re-syncing Argo CD — the problem is in the Rollout controller, not in GitOps sync"
+      ]
     }
   ]
 }
