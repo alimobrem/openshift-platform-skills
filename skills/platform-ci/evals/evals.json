@@ -80,6 +80,21 @@
         "Mentions that Shipwright Build can be triggered from within a Tekton Pipeline (they're not mutually exclusive)",
         "Does NOT just list features — actually weighs the tradeoffs for this specific scenario (15 existing pipelines)"
       ]
+    },
+    {
+      "id": 6,
+      "name": "Will this fix work? Wrong fix for pipeline failure",
+      "prompt": "My Tekton Pipeline 'deploy-pipeline' has 4 tasks: git-clone, build, scan, deploy. The deploy task keeps failing with 'error: unauthorized' when trying to kubectl apply to the production cluster.\n\nMy teammate suggested this fix: add cluster-admin ClusterRoleBinding for the pipeline ServiceAccount:\n\n  apiVersion: rbac.authorization.k8s.io/v1\n  kind: ClusterRoleBinding\n  metadata:\n    name: pipeline-admin\n  subjects:\n    - kind: ServiceAccount\n      name: pipeline\n      namespace: ci\n  roleRef:\n    apiGroup: rbac.authorization.k8s.io\n    kind: ClusterRole\n    name: cluster-admin\n\nWill this fix work? Should I apply it?",
+      "expectations": [
+        "Acknowledges that the fix would technically resolve the 'unauthorized' error",
+        "Strongly recommends AGAINST applying it — cluster-admin on a pipeline SA is a critical security violation",
+        "Explains the risk: any pipeline task can now create/delete any resource in any namespace, including Secrets, RBAC, and cluster-scoped resources",
+        "Explains that a compromised pipeline (e.g., malicious code in a PR) would have full cluster access",
+        "Provides the correct fix: a scoped Role or ClusterRole with only the specific verbs and resources the deploy task needs (e.g., get/create/update on deployments in the target namespace)",
+        "Suggests the proper RBAC YAML with least-privilege permissions",
+        "Mentions that the pipeline should NOT directly kubectl apply to prod — it should update the GitOps repo and let Argo CD sync (separation of concerns)",
+        "Does NOT just say 'no' — explains WHY and provides the right alternative"
+      ]
     }
   ]
 }

@@ -84,6 +84,34 @@
         "Recommends the least-privilege fix (per-port PERMISSIVE or metrics endpoint) over broad namespace exceptions",
         "Provides the actual PeerAuthentication YAML for the recommended fix"
       ]
+    },
+    {
+      "id": 6,
+      "name": "Red herring: 503s that look like mTLS but aren't",
+      "prompt": "We're getting 503 errors on our checkout-svc after a deployment. We recently enabled strict mTLS, so we assumed that's the cause. But we checked — the checkout namespace HAS sidecar injection enabled, all pods have sidecars, and PeerAuthentication is STRICT everywhere. The 503s only happen when traffic comes from the payments-svc to checkout-svc. Traffic from the frontend to checkout-svc works fine.\n\nHere's our DestinationRule:\n  apiVersion: networking.istio.io/v1\n  kind: DestinationRule\n  metadata:\n    name: checkout-svc-dr\n    namespace: checkout\n  spec:\n    host: checkout-svc\n    subsets:\n      - name: stable\n        labels:\n          version: v2\n      - name: canary\n        labels:\n          version: v3\n\nAnd our VirtualService routes all traffic to the 'stable' subset. But our checkout-svc pods have the label app: checkout-svc and NO 'version' label at all.\n\nWhy are we getting 503s?",
+      "expectations": [
+        "Does NOT blame mTLS — correctly identifies that mTLS is configured properly (both sides have sidecars, STRICT is fine)",
+        "Identifies the real root cause: DestinationRule subset labels (version: v2) don't match the pod labels (pods have no 'version' label)",
+        "Explains that Istio routes to an empty subset when labels don't match, returning 503",
+        "Explains why traffic from frontend works but payments doesn't — if frontend doesn't use a DestinationRule or routes to the host directly without subset selection",
+        "Recommends fixing the pod labels to include version: v2, OR updating the DestinationRule subset labels to match existing pod labels",
+        "Does NOT recommend changing PeerAuthentication or mTLS settings — that's the red herring"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "Conflicting requirements: strict mTLS + external non-TLS service",
+      "prompt": "We need to call an external payment processor API at http://legacy-processor.partner.com:8080 (plain HTTP, no TLS — they're a legacy partner and won't upgrade). We also have a strict company policy: all service-to-service communication must use mTLS, enforced by a mesh-wide PeerAuthentication in STRICT mode. Our payments-svc in the mesh needs to call this external endpoint. How do I make this work without weakening our mTLS policy?",
+      "expectations": [
+        "Identifies the fundamental conflict: STRICT mTLS applies to sidecar-proxied traffic, but the external service is outside the mesh",
+        "Explains that Istio's mTLS policy only applies to traffic between sidecars — traffic to external services uses ServiceEntry + DestinationRule, not PeerAuthentication",
+        "Recommends creating a ServiceEntry for the external endpoint",
+        "Recommends a DestinationRule for the external host with tls.mode: DISABLE (since the partner doesn't support TLS)",
+        "Addresses the security concern: suggests compensating controls (egress gateway for audit logging, NetworkPolicy to restrict which pods can reach the external service, AuthorizationPolicy to limit which ServiceAccounts can call it)",
+        "Does NOT recommend weakening the mesh-wide STRICT PeerAuthentication",
+        "Does NOT claim this is impossible — Istio handles mesh-internal and mesh-external traffic differently",
+        "Provides actual ServiceEntry and DestinationRule YAML"
+      ]
     }
   ]
 }

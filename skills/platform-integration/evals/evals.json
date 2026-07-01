@@ -83,6 +83,20 @@
         "Provides specific diagnostic commands (kubectl argo rollouts status, kubectl get analysisrun)",
         "Does NOT suggest re-syncing Argo CD — the problem is in the Rollout controller, not in GitOps sync"
       ]
+    },
+    {
+      "id": 6,
+      "name": "Multi-bug interaction: pipeline writes stale branch + promoter auto-merges",
+      "prompt": "Our delivery flow has a subtle problem. Deployments to production keep including changes that haven't been tested in staging.\n\nHere's the setup:\n- Tekton pipeline's gitops-update task commits new image tags to the 'main' branch of the GitOps repo (not to a PR or environment-specific branch)\n- Argo CD Applications for dev, staging, and prod all point to the same repo with targetRevision: main, but different paths (overlays/dev, overlays/staging, overlays/production)\n- gitops-promoter has a PromotionStrategy with autoMerge: true for all environments\n- There are no CommitStatus sources configured — the promoter has no health gates\n\nWhy are untested changes reaching production, and what's the root cause? There are multiple issues here — find all of them.",
+      "expectations": [
+        "Identifies issue 1: pipeline writes directly to main branch, skipping PR-based promotion — changes land in all environments simultaneously since all Apps track main",
+        "Identifies issue 2: promoter has autoMerge: true with no CommitStatus sources, so it auto-promotes without any health gates or test results",
+        "Identifies issue 3: all environments use the same targetRevision (main) — there's no environment progression, just one branch for everything",
+        "Explains the interaction: issue 1 + issue 3 means the pipeline bypasses the promoter entirely — changes go straight to main which all environments track. The promoter is effectively a no-op",
+        "Recommends the fix: pipeline should commit to a dev branch (or create a PR), each environment should track its own branch, and the promoter should gate promotions on CommitStatus from test/scan results",
+        "Does NOT identify just one issue and stop — the prompt says 'find all of them' and there are at least 3 interacting problems",
+        "Explains why fixing just one issue (e.g., adding CommitStatus) would NOT fully solve the problem — the branch structure itself is broken"
+      ]
     }
   ]
 }

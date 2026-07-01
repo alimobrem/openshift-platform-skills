@@ -63,6 +63,19 @@
         "Explains the difference between SecretStore (namespaced, must be in same namespace) and ClusterSecretStore (cluster-scoped, accessible from any namespace)",
         "Provides the corrected ExternalSecret YAML snippet"
       ]
+    },
+    {
+      "id": 5,
+      "name": "Subtle: ExternalSecret looks correct but will fail in production",
+      "prompt": "I have this ExternalSecret that works perfectly in staging but fails in production with 'secret data not found' even though the Vault path exists and I can read it manually with vault kv get.\n\nStaging (works):\n  apiVersion: external-secrets.io/v1\n  kind: ExternalSecret\n  metadata:\n    name: api-keys\n    namespace: staging\n  spec:\n    refreshInterval: 1h\n    secretStoreRef:\n      kind: ClusterSecretStore\n      name: vault-backend\n    data:\n    - secretKey: stripe-key\n      remoteRef:\n        key: secret/data/staging/api-keys\n        property: stripe-key\n\nProduction (fails):\n  apiVersion: external-secrets.io/v1\n  kind: ExternalSecret\n  metadata:\n    name: api-keys\n    namespace: production\n  spec:\n    refreshInterval: 1h\n    secretStoreRef:\n      kind: ClusterSecretStore\n      name: vault-backend\n    data:\n    - secretKey: stripe-key\n      remoteRef:\n        key: secret/production/api-keys\n        property: stripe-key\n\nThe ClusterSecretStore uses Vault KV v2 at path 'secret'. The Vault path secret/production/api-keys exists and I confirmed it with vault kv get secret/production/api-keys. What's wrong?",
+      "expectations": [
+        "Identifies the subtle difference: staging uses 'secret/data/staging/api-keys' but production uses 'secret/production/api-keys' (missing the '/data/' segment)",
+        "Explains that Vault KV v2 requires the '/data/' prefix in the API path even though the CLI 'vault kv get' abstracts it away — the CLI path and the API path are different",
+        "Notes that 'vault kv get secret/production/api-keys' works because the CLI adds '/data/' automatically, but ESO uses the raw API path and needs it explicitly",
+        "Provides the fix: change the production remoteRef.key to 'secret/data/production/api-keys'",
+        "Does NOT suggest changing the ClusterSecretStore, Vault permissions, or Kubernetes RBAC — the issue is purely in the key path",
+        "Does NOT blame the namespace difference between staging and production — both use ClusterSecretStore which is namespace-agnostic"
+      ]
     }
   ]
 }
