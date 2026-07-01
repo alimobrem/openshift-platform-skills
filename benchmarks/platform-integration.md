@@ -1,31 +1,30 @@
 # platform-integration
 
-## v0.2.0 (2026-06-09)
+## v0.3.0 (2026-07-01)
 
-Model: `claude-opus-4-6`
+### claude-opus-4-6
 
-| Eval | Score |
-|------|-------|
-| End-to-end delivery flow | 10/10 (100%) |
-| Platform onboarding | 10/10 (100%) |
-| DORA metrics | 10/10 (100%) |
-| Cross-layer debug | 10/10 (100%) |
-| Rollout paused vs Argo CD Synced | 8/8 (100%) |
-| **Overall** | **48/48 (100%)** |
-
-**Key behaviors observed:**
-- E2E: all 8 layers wired (Shipwright → Tekton → Quay → ESO → Argo CD → Istio → Rollout → Promoter)
-- Onboarding: complete team setup (namespace, quota, NetworkPolicy, RBAC, pipeline, AppProject, mesh)
-- DORA: PromQL for all 4 metrics + Grafana dashboard JSON + PrometheusRule alerts
-- Debug: 9-step cross-layer trace with CLI commands per layer
-- Rollout vs Synced: correctly identified Paused Rollout as root cause, explained Argo CD Synced ≠ Rollout progression, distinguished sync status from pod progression, did NOT suggest re-syncing Argo CD
+| Eval | Type | Score |
+|------|------|-------|
+| End-to-end delivery flow | YAML gen | 10/10 (100%) |
+| Platform onboarding | YAML gen | 10/10 (100%) |
+| DORA metrics | YAML gen | 10/10 (100%) |
+| Cross-layer debug | Diagnose | 10/10 (100%) |
+| Rollout paused vs Argo CD Synced | Diagnose | 8/8 (100%) |
+| Multi-bug: pipeline + promoter interaction | Hard: multi-bug | 7/7 (100%) |
+| **Overall** | | **55/55 (100%)** |
 
 ### claude-sonnet-4-6
 
-| Eval | Score |
-|------|-------|
-| End-to-end delivery flow | 10/10 (100%) |
-| Platform onboarding | 10/10 (100%) |
-| DORA metrics | 10/10 (100%) |
-| Cross-layer debug | 10/10 (100%) |
-| **Overall** | **40/40 (100%)** |
+| Eval | Type | Score |
+|------|------|-------|
+| End-to-end delivery flow | YAML gen | 10/10 (100%) |
+| Platform onboarding | YAML gen | 10/10 (100%) |
+| DORA metrics | YAML gen | 10/10 (100%) |
+| Cross-layer debug | Diagnose | 10/10 (100%) |
+| Multi-bug: pipeline + promoter interaction | Hard: multi-bug | 7/7 (100%) |
+| **Overall** | | **47/47 (100%)** |
+
+### Cross-model notes
+
+- **Multi-bug:** Both models found all issues (4 each) including the autoMerge:true on prod that wasn't in the original expectations. Both explained why fixing one issue is insufficient.

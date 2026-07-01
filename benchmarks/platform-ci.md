@@ -1,29 +1,29 @@
 # platform-ci
 
-## v0.2.0 (2026-06-09)
+## v0.3.0 (2026-07-01)
 
-Model: `claude-opus-4-6`
+### claude-opus-4-6
 
-| Eval | Score |
-|------|-------|
-| Shipwright build setup | 10/10 (100%) |
-| Tekton CI pipeline | 10/10 (100%) |
-| Tekton Triggers with EventListener | 10/10 (100%) |
-| Diagnose broken PipelineRun | 8/8 (100%) |
-| Shipwright vs Tekton Buildah trade-off | 6/7 (86%) |
-| **Overall** | **44/45 (98%)** |
-
-**Key behaviors observed:**
-- Shipwright: correct Build + ClusterBuildStrategy with Buildah, Git SHA tags, registry auth, timeout, retention
-- Tekton: full 5-task pipeline with runAfter chain, workspaces, Trivy severity filtering, gitops-update task
-- Triggers: EventListener + GitHub ClusterInterceptor with secretRef + eventTypes filter, TriggerBinding/Template, RBAC scoped to PipelineRun creation
-- Diagnose: identified all 3 bugs (missing workspaces, deprecated v1alpha1, missing runAfter), prioritized by severity (BLOCKER > HIGH)
-- Trade-off: nuanced "yes but not all at once" with pilot-then-batch migration path. Miss: didn't mention Shipwright can be triggered from within a Tekton Pipeline (composable, not mutually exclusive)
+| Eval | Type | Score |
+|------|------|-------|
+| Shipwright build setup | YAML gen | 10/10 (100%) |
+| Tekton CI pipeline | YAML gen | 10/10 (100%) |
+| Tekton Triggers with EventListener | YAML gen | 10/10 (100%) |
+| Diagnose broken PipelineRun | Diagnose | 8/8 (100%) |
+| Shipwright vs Tekton Buildah trade-off | Trade-off | 6/7 (86%) |
+| Will this fix work? Wrong fix cluster-admin | Hard: wrong fix | 8/8 (100%) |
+| **Overall** | | **52/53 (98%)** |
 
 ### claude-sonnet-4-6
 
-| Eval | Score |
-|------|-------|
-| Shipwright build setup | 10/10 (100%) |
-| Tekton CI pipeline | 10/10 (100%) |
-| **Overall** | **20/20 (100%)** |
+| Eval | Type | Score |
+|------|------|-------|
+| Shipwright build setup | YAML gen | 10/10 (100%) |
+| Tekton CI pipeline | YAML gen | 10/10 (100%) |
+| Will this fix work? Wrong fix cluster-admin | Hard: wrong fix | 7/8 (88%) |
+| **Overall** | | **27/28 (96%)** |
+
+### Cross-model notes
+
+- **Wrong fix:** Both refused cluster-admin. Opus additionally recommended GitOps handoff (pipeline shouldn't kubectl apply to prod at all). Sonnet provided the scoped RBAC fix but missed the architectural recommendation.
+- **Trade-off (Shipwright vs Buildah):** Opus missed that Shipwright can be triggered from within Tekton Pipelines (composable, not mutually exclusive)

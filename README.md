@@ -315,7 +315,7 @@ Destructive operations (delete, scale-to-zero, rollback) require typing the reso
 ## Benchmarks
 
 Evals test **outcomes** — YAML correctness, diagnostic reasoning, trade-off analysis,
-and security judgment. 19 evals across 4 skills, tested on Opus and Sonnet.
+and security judgment. 24 evals across 4 skills, tested on Opus and Sonnet.
 
 <table>
 <thead>
@@ -330,43 +330,47 @@ and security judgment. 19 evals across 4 skills, tested on Opus and Sonnet.
 <tbody>
 <tr>
 <td><a href="benchmarks/platform-ci.md"><b>platform-ci</b></a></td>
-<td>5</td>
-<td><b>44/45 (98%)</b></td>
-<td><b>20/20 (100%)</b></td>
-<td>YAML gen, diagnose broken PipelineRun, Shipwright vs Buildah trade-off</td>
+<td>6</td>
+<td><b>52/53 (98%)</b></td>
+<td><b>27/28 (96%)</b></td>
+<td>YAML gen, diagnose, trade-off, refuse wrong fix (cluster-admin)</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-mesh.md"><b>platform-mesh</b></a></td>
-<td>5</td>
-<td><b>43/49 (88%)</b></td>
-<td><b>9/10 (90%)</b></td>
-<td>YAML gen, canary vs blue-green trade-off, diagnose mTLS 503s</td>
+<td>7</td>
+<td><b>57/63 (90%)</b></td>
+<td><b>22/24 (92%)</b></td>
+<td>YAML gen, trade-off, diagnose, red herring, conflicting requirements</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-infra.md"><b>platform-infra</b></a></td>
-<td>4</td>
-<td><b>34/34 (100%)</b></td>
-<td><b>20/20 (100%)</b></td>
-<td>YAML gen, refuse hardcoded creds, diagnose ESO kind mismatch</td>
+<td>5</td>
+<td><b>40/40 (100%)</b></td>
+<td><b>26/26 (100%)</b></td>
+<td>YAML gen, refuse hardcoded creds, diagnose ESO, subtle Vault path</td>
 </tr>
 <tr>
 <td><a href="benchmarks/platform-integration.md"><b>platform-integration</b></a></td>
-<td>5</td>
-<td><b>48/48 (100%)</b></td>
-<td><b>40/40 (100%)</b></td>
-<td>E2E flow, onboarding, DORA, diagnose Rollout vs Argo CD sync</td>
+<td>6</td>
+<td><b>55/55 (100%)</b></td>
+<td><b>47/47 (100%)</b></td>
+<td>E2E flow, onboarding, DORA, diagnose, multi-bug interaction</td>
 </tr>
 <tr>
 <td><b>Total</b></td>
-<td><b>19</b></td>
-<td><b>169/176 (96%)</b></td>
-<td><b>89/90 (99%)</b></td>
+<td><b>24</b></td>
+<td><b>204/211 (97%)</b></td>
+<td><b>122/125 (98%)</b></td>
 <td></td>
 </tr>
 </tbody>
 </table>
 
-<sub>Run <code>make test-all</code> to run all 12 evals. Per-skill: <code>make test-ci</code>, <code>make test-mesh</code>, etc.</sub>
+> **Hardest evals:** Canary vs blue-green trade-off for payments (Opus: 29% — recommended canary,
+> expected blue-green). Red herring 503s and subtle Vault KV v2 path: both models scored 100%.
+> Sonnet misses are "depth of recommendation" gaps, not correctness errors.
+
+<sub>Run <code>make test-all</code> to run all 24 evals. Per-skill: <code>make test-ci</code>, <code>make test-mesh</code>, etc.</sub>
 
 ## Contributing
 
